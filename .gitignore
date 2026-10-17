@@ -22,6 +22,7 @@ models/
 build/
 dist/
 *.spec.bak
+*.zip
 
 # Local User Configuration (defaults are generated on first launch)
 # Use config.example.json for reference
