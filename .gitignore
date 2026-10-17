@@ -1,0 +1,46 @@
+# ==============================================================================
+# Local Translator - Git Ignore Rules
+# ==============================================================================
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Large Model Weights (Downloaded locally, ~1.38 GB)
+models/
+
+# PyInstaller Build & Dist artifacts
+build/
+dist/
+*.spec.bak
+
+# Local User Configuration (defaults are generated on first launch)
+# Use config.example.json for reference
+config.json
+
+# IDE & Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System files
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Temporary & Log files
+*.log
+*.tmp
+*.bak
+scratch/

@@ -1,0 +1,29 @@
+{
+  "engine": "compare",
+  "source_lang": "auto",
+  "target_lang": "auto",
+  "recent_source_langs": [
+    "en",
+    "ru"
+  ],
+  "recent_target_langs": [
+    "en",
+    "ru"
+  ],
+  "nllb_model_path": "models/nllb-200-distilled-1.3B-ct2-int8",
+  "device": "auto",
+  "compute_type": "int8_float16",
+  "lm_studio_url": "http://127.0.0.1:1234/v1",
+  "lm_studio_model": "",
+  "lm_studio_temperature": 0.2,
+  "hotkey_translate": "<ctrl>+q",
+  "hotkey_replace": "<ctrl>+<shift>+q",
+  "hotkey_ocr": "<ctrl>+<shift>+s",
+  "auto_copy_translation": false,
+  "close_popup_on_copy": true,
+  "proxy": "",
+  "dark_mode": true,
+  "ui_language": "en",
+  "start_minimized": false,
+  "minimize_to_tray": true
+}
