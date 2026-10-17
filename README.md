@@ -11,13 +11,37 @@
   <img src="https://img.shields.io/badge/License-MIT-brightgreen" alt="License" />
 </p>
 
-**Local Translator** is a fast, 100% private, and feature-rich desktop translation tool for Windows in the spirit of the classic *QTranslate*. It seamlessly combines high-speed offline neural machine translation (**Meta NLLB-200 1.3B INT8** via **CTranslate2**) with any local Large Language Models and Vision-Language models running in **LM Studio**.
+<p align="center">
+  <b><a href="#english">English Documentation</a></b> | <b><a href="#русский">Русская документация</a></b>
+</p>
+
+---
+
+<a name="english"></a>
+# English
+
+**Local Translator** is a fast, 100% private, and feature-rich desktop translation tool for Windows in the spirit of the classic *QTranslate*. It seamlessly pairs high-speed offline neural machine translation (**Meta NLLB-200 1.3B INT8** via **CTranslate2**) with any local Large Language Models and Vision-Language models running in **LM Studio**.
+
+## 📸 Screenshots
+
+<p align="center">
+  <b>Side-by-Side Dual Model Comparison (NLLB 1.3B & LM Studio with Latency Metrics) & Screen OCR</b><br>
+  <img src="images/LocalTranslator.png" alt="Local Translator Main Window" width="95%" />
+</p>
+
+<p align="center">
+  <img src="images/LocalTranslator_01.png" alt="Settings Dialog" width="48%" />
+  &nbsp;
+  <img src="images/LocalTranslator_02.png" alt="12 UI Languages" width="48%" />
+  <br>
+  <i>Left: Engine & Hardware Settings (CUDA / CPU / LM Studio / Hotkeys). Right: 12 Interface Languages selector.</i>
+</p>
 
 ---
 
 ## 🌟 Key Features
 
-### 1. ⚡ Ultra-Fast Local Translation (Meta NLLB-200 1.3B)
+### 1. ⚡ Ultra-Fast Offline Neural Translation (Meta NLLB-200 1.3B)
 * Runs **100% locally and offline** — zero telemetry, zero cloud data transfer.
 * Accelerated by **CTranslate2** with NVIDIA CUDA (GPU) or optimized CPU INT8 execution.
 * Near-instant translation with typical latencies of **30–80 ms** on modern GPUs.
@@ -49,18 +73,7 @@
 
 ### 7. 🌐 12 User Interface Languages
 * Fully localized GUI with on-the-fly switching in Settings:
-  * 🇬🇧 English (default)
-  * 🇷🇺 Русский
-  * 🇩🇪 Deutsch
-  * 🇫🇷 Français
-  * 🇪🇸 Español
-  * 🇮🇹 Italiano
-  * 🇨🇳 中文 (Simplified)
-  * 🇯🇵 日本語
-  * 🇺🇦 Українська
-  * 🇹🇷 Türkçe
-  * 🇵🇱 Polski
-  * 🇵🇹 Português
+  English (default), Русский, Deutsch, Français, Español, Italiano, 中文 (Simplified), 日本語, Українська, Türkçe, Polski, Português.
 
 ### 8. 🖥️ Windows Tray & Silent Background Mode
 * Minimizes to the system tray on close or starts minimized on Windows boot.
@@ -89,28 +102,19 @@
 
 ### Option B: Run from Python Source
 
-#### 1. Clone the repository
 ```bash
+# 1. Clone repository
 git clone https://github.com/your-username/local-translator.git
 cd local-translator
-```
 
-#### 2. Create and activate a virtual environment
-```bash
+# 2. Create virtual environment
 python -m venv .venv
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-# Windows Command Prompt:
-.venv\Scripts\activate.bat
-```
+.venv\Scripts\activate
 
-#### 3. Install dependencies
-```bash
+# 3. Install requirements
 pip install -r requirements.txt
-```
 
-#### 4. Run the application
-```bash
+# 4. Launch
 python main.py
 ```
 
@@ -143,49 +147,159 @@ To build the self-contained portable Windows executable:
 ```bash
 python build_exe.py
 ```
-Or run:
-```cmd
-build_exe.bat
-```
-
-The output will be generated in `dist/LocalTranslator/LocalTranslator.exe`. The script automatically links your downloaded `models/` directory using an NTFS junction point (taking 0 extra disk space).
+Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/LocalTranslator.exe`.
 
 ---
 
-## 📁 Project Architecture
+<a name="русский"></a>
+# Русский
+
+**Local Translator** — быстрый, полностью автономный и конфиденциальный десктопный переводчик для Windows в стиле легендарного *QTranslate*. Сочетает сверхбыструю локальную нейросеть (**Meta NLLB-200 1.3B INT8** на движке **CTranslate2**) и любые большие языковые и мультимодальные модели, запущенные в **LM Studio**.
+
+## 📸 Скриншоты
+
+<p align="center">
+  <b>Параллельный перевод двумя моделями (NLLB 1.3B и LM Studio с замером миллисекунд) и кнопка распознавания экрана</b><br>
+  <img src="images/LocalTranslator.png" alt="Главное окно Local Translator" width="95%" />
+</p>
+
+<p align="center">
+  <img src="images/LocalTranslator_01.png" alt="Окно настроек" width="48%" />
+  &nbsp;
+  <img src="images/LocalTranslator_02.png" alt="12 языков интерфейса" width="48%" />
+  <br>
+  <i>Слева: Настройки движков и ускорения (CUDA / CPU / LM Studio / Хоткеи). Справа: Выбор из 12 языков интерфейса.</i>
+</p>
+
+---
+
+## 🌟 Основные возможности
+
+### 1. ⚡ Мгновенный локальный перевод (Meta NLLB-200 1.3B)
+* Работает **на 100% локально без интернета** — нулевая телеметрия, полная приватность данных.
+* Аппаратное ускорение **CTranslate2** через NVIDIA CUDA (RTX / GTX) или оптимизированный CPU INT8.
+* Время отклика: всего **30–80 мс** на современных видеокартах.
+
+### 2. 🤖 Интеграция с LM Studio (Локальные LLM)
+* Подключение к локальному серверу LM Studio по OpenAI-совместимому API (`http://127.0.0.1:1234/v1`).
+* Поддержка любых моделей (Qwen 2.5, DeepSeek, Llama 3, Gemma 2, Mistral и др.) со строгим системным промптом и автоподхватом активной модели.
+
+### 3. ⚖️ Сравнение двух моделей Side-by-Side (2 Models)
+* Одновременный параллельный перевод текста в **NLLB 1.3B** и **LM Studio**.
+* Наглядное сравнение формулировок и времени ответа в миллисекундах (`⚡ ms`) с кнопками быстрого копирования.
+
+### 4. 📷 Выделение части экрана и распознавание текста (Vision LLM OCR)
+* Инструмент скриншотов с плавным затемнением экрана, поддержкой нескольких мониторов и High-DPI масштабирования Windows.
+* Выделенный фрагмент отправляется в Vision-модель в LM Studio (**Qwen2-VL**, **MiniCPM-V**, **LLaVA**, **Phi-3.5-Vision**).
+* **Сценарий 2-в-1**: распознанный текст помещается в окно оригинала (можно скопировать или отредактировать) и сразу автоматически переводится на целевой язык!
+* Поддерживается также вставка скриншота напрямую из буфера обмена.
+
+### 5. 🎯 Всплывающее окно у курсора (`Ctrl+Q`) и замена на месте (`Ctrl+Shift+Q`)
+* **`Ctrl+Q`**: выделите текст в любом приложении Windows (браузер, Telegram, PDF, IDE) — у курсора мыши появится темное всплывающее окно с переводом.
+* **`Ctrl+Shift+Q`**: автоматически заменяет выделенный текст его переводом прямо в исходной программе.
+
+### 6. 🌍 200+ языков с умным поиском
+* Полная поддержка 202 языков стандарта FLORES-200.
+* Автопоиск по подстроке и закрепление недавних языков (⭐).
+* **Адаптация под локаль**: при английском интерфейсе первым отображается английское название (`German / Deutsch (Немецкий) [de]`, сортировка A–Z), при русском — русское (`Немецкий / Deutsch (German) [de]`, сортировка А–Я).
+* Быстрые кнопки переключения: **RU**, **EN**, **Авто**.
+
+### 7. 🌐 12 языков интерфейса
+* Английский (по умолчанию), Русский, Немецкий, Французский, Испанский, Итальянский, Китайский, Японский, Украинский, Турецкий, Польский, Португальский.
+
+### 8. 🖥️ Работа в системном трее Windows
+* Сворачивание в трей при закрытии, автозапуск с Windows, меню быстрого доступа к OCR и очистке кэша.
+
+---
+
+## ⌨️ Таблица горячих клавиш
+
+| Сочетание клавиш | Действие | Описание |
+|---|---|---|
+| <kbd>Ctrl</kbd> + <kbd>Q</kbd> | **Всплывающий перевод** | Показывает всплывающее окно перевода у курсора для выделенного текста |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> | **Замена текста на месте** | Переводит и заменяет выделенный текст прямо в активном приложении |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | **Скриншот OCR** | Затемняет экран, делает снимок выделенной области, распознает текст через Vision LLM и переводит |
+| <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | **Перевести** | Запускает перевод в основном окне |
+| <kbd>Esc</kbd> | **Закрыть / Отмена** | Закрывает всплывающее окно или отменяет выделение фрагмента экрана |
+
+---
+
+## 🚀 Быстрый старт
+
+### Вариант A: Готовый исполняемый файл .EXE (Рекомендуется)
+1. Скачайте или соберите `dist/LocalTranslator/LocalTranslator.exe`.
+2. Запустите `LocalTranslator.exe`.
+3. При первом запуске нажмите кнопку загрузки модели NLLB 1.3B (~1.38 ГБ) прямо в окне приложения.
+
+### Вариант B: Запуск из исходного кода Python
+
+```bash
+# 1. Клонировать репозиторий
+git clone https://github.com/your-username/local-translator.git
+cd local-translator
+
+# 2. Создать виртуальное окружение
+python -m venv .venv
+.venv\Scripts\activate
+
+# 3. Установить зависимости
+pip install -r requirements.txt
+
+# 4. Запустить
+python main.py
+```
+
+---
+
+## 🤖 Настройка LM Studio и Vision OCR
+
+1. Установите и запустите **[LM Studio](https://lmstudio.ai/)**.
+2. Для текстового перевода загрузите любую модель (например, `Qwen2.5-7B-Instruct`, `Llama-3.1-8B-Instruct`).
+3. Для распознавания скриншотов (**Ctrl+Shift+S**) загрузите Vision-модель:
+   * **Qwen2-VL** (`Qwen2-VL-7B-Instruct-GGUF`) — *лучшее качество мультиязычного OCR*
+   * **MiniCPM-V 2.6**
+   * **LLaVA 1.6**
+4. Во вкладке **Local Server** запустите сервер (кнопка *Start Server*, порт `1234`).
+
+---
+
+## 📦 Сборка в автономный .EXE через PyInstaller
+
+```bash
+python build_exe.py
+```
+Или запустите `build_exe.bat`. Готовая сборка находится в `dist/LocalTranslator/LocalTranslator.exe`.
+
+---
+
+## 📁 Структура проекта
 
 ```
 LocalTranslator/
 ├── app/
-│   ├── config.py              # Configuration manager & JSON persistence
-│   ├── languages_data.py      # 202 FLORES languages, locale-aware names & sorting
-│   ├── i18n.py                # 12-language localization dictionary & tr() helper
-│   ├── translator_nllb.py     # CTranslate2 NLLB 1.3B engine (CUDA/CPU)
-│   ├── translator_lmstudio.py # LM Studio client (text translation & Vision OCR)
-│   ├── model_downloader.py    # Resumable HuggingFace downloader with proxy support
-│   ├── hotkey_service.py      # Global hotkeys (pynput + Win32 clipboard API)
-│   ├── ui_snippet.py          # High-DPI screen snipping overlay widget
-│   ├── ui_popup.py            # Floating cursor HUD (QTranslate style)
-│   ├── ui_main.py             # Main window (Single, 2 Models comparison, OCR)
-│   └── ui_tray.py             # Windows system tray service & context menu
-├── models/                    # NLLB model directory (~1.38 GB, ignored by git)
-├── build_app.spec             # PyInstaller specification file
-├── build_exe.py               # Automated compilation script
-├── download_1.3b_model.py     # Standalone CLI model downloader
-├── requirements.txt           # Python package dependencies
-├── config.example.json        # Template configuration file
-├── LICENSE                    # MIT License
-└── main.py                    # Application entry point
+│   ├── config.py              # Менеджер настроек (JSON)
+│   ├── languages_data.py      # 202 языка FLORES, адаптивные имена и сортировка
+│   ├── i18n.py                # Локализация на 12 языков и функция tr()
+│   ├── translator_nllb.py     # Локальный движок NLLB 1.3B (CTranslate2 + CUDA/CPU)
+│   ├── translator_lmstudio.py # Клиент LM Studio (текст и Vision OCR)
+│   ├── model_downloader.py    # Загрузчик с HuggingFace с поддержкой докачки и прокси
+│   ├── hotkey_service.py      # Глобальный перехват хоткеев и буфер обмена Windows
+│   ├── ui_snippet.py          # Виджет выделения части экрана (High-DPI OCR)
+│   ├── ui_popup.py            # Всплывающее окно у курсора (HUD)
+│   ├── ui_main.py             # Главное окно (Single, 2 Models, OCR)
+│   └── ui_tray.py             # Иконка и меню в трее Windows
+├── images/                    # Скриншоты для документации
+├── models/                    # Локальная модель NLLB (~1.38 ГБ, не коммитится)
+├── build_app.spec             # Спецификация PyInstaller
+├── build_exe.py               # Скрипт сборки .EXE
+├── requirements.txt           # Зависимости Python
+├── config.example.json        # Пример конфигурации
+├── LICENSE                    # Лицензия MIT
+└── main.py                    # Главная точка входа
 ```
 
 ---
 
-## 📄 License
+## 📄 Лицензия
 
-This project is licensed under the [MIT License](LICENSE).
-
-## 🙏 Acknowledgements
-* [Meta AI](https://github.com/facebookresearch/fairseq/tree/nllb) for the NLLB-200 translation models.
-* [OpenNMT / CTranslate2](https://github.com/OpenNMT/CTranslate2) for the high-performance inference engine.
-* [LM Studio](https://lmstudio.ai/) for the local LLM runtime and OpenAI-compatible server.
-* [PyQt6](https://riverbankcomputing.com/software/pyqt/) for the GUI framework.
+Проект распространяется под открытой лицензией [MIT License](LICENSE).
