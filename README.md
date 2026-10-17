@@ -96,16 +96,17 @@
 ## 🚀 Quick Start
 
 ### Option A: Run Pre-Built Portable Executable (Recommended)
-1. Download or compile `dist/LocalTranslator/LocalTranslator.exe`.
-2. Run `LocalTranslator.exe`.
-3. If the NLLB model is not yet downloaded, click the **Download 1.3B Model** banner in the UI (downloads ~1.38 GB directly with pause/resume support).
+1. Download **[LocalTranslator-v1.0.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** from the latest GitHub Release.
+2. Extract the archive into any folder on your PC.
+3. Run `LocalTranslator.exe`.
+4. If the NLLB model is not yet downloaded, click the **Download 1.3B Model** banner in the UI (downloads ~1.38 GB directly with pause/resume support).
 
 ### Option B: Run from Python Source
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-username/local-translator.git
-cd local-translator
+git clone https://github.com/SaidAuita/LocalTranslator.git
+cd LocalTranslator
 
 # 2. Create virtual environment
 python -m venv .venv
@@ -227,16 +228,17 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 ## 🚀 Быстрый старт
 
 ### Вариант A: Готовый исполняемый файл .EXE (Рекомендуется)
-1. Скачайте или соберите `dist/LocalTranslator/LocalTranslator.exe`.
-2. Запустите `LocalTranslator.exe`.
-3. При первом запуске нажмите кнопку загрузки модели NLLB 1.3B (~1.38 ГБ) прямо в окне приложения.
+1. Скачайте архив **[LocalTranslator-v1.0.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** из раздела [Releases](https://github.com/SaidAuita/LocalTranslator/releases).
+2. Распакуйте архив в любую папку на вашем компьютере.
+3. Запустите `LocalTranslator.exe`.
+4. При первом запуске нажмите кнопку загрузки модели NLLB 1.3B (~1.38 ГБ) прямо в окне приложения (скачивается в 1 клик с поддержкой докачки).
 
 ### Вариант B: Запуск из исходного кода Python
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/your-username/local-translator.git
-cd local-translator
+git clone https://github.com/SaidAuita/LocalTranslator.git
+cd LocalTranslator
 
 # 2. Создать виртуальное окружение
 python -m venv .venv
