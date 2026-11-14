@@ -95,6 +95,26 @@
 
 ---
 
+## 🔌 How to Connect Local Models (LM Studio & Ollama)
+
+Local Translator automatically detects and connects to your locally installed AI models:
+
+### 1. LM Studio Models
+* **Automatic Detection**: Scans your LM Studio models directory (`~/.lmstudio/models`) and queries the LM Studio CLI (`lms ls`).
+* **Model Selection**: Open **Settings** (⚙️) -> in the **LM Studio / Ollama** section, click the **Selected Model** dropdown. All downloaded models are listed with their exact size on disk (e.g. `[LM Studio] Gemma 4 E2B (4.11 GB)`, `[LM Studio] Qwen 3.8 27B (16.52 GB)`).
+* **Headless Background Launch**: You don't need to manually keep the heavy LM Studio application open! If the server is offline, Local Translator automatically starts the headless server (`lms server start`) and loads the selected model into GPU/CPU memory (`lms load -y <model>`).
+* **Direct Pre-Loading**: Click **▶ Load into Memory** in Settings to preheat the model into VRAM immediately.
+
+### 2. Ollama Models
+* **Automatic Detection**: Detects all installed Ollama models via `ollama list` and the local Ollama API (e.g. `[Ollama] qwen3:4b (2.33 GB)`).
+* **Auto-Port Switching**: Selecting an Ollama model automatically routes requests to Ollama's OpenAI-compatible port (`http://127.0.0.1:11434/v1`).
+* **Auto-Start**: If the Ollama service is stopped, Local Translator automatically initiates `ollama serve` in the background.
+
+### 3. Reasoning Models Support
+* When using modern thinking models such as **Qwen 3**, **Gemma 4**, or **DeepSeek-R1**, Local Translator automatically expands the token context window and filters out internal reasoning blocks (`<think>...</think>`), delivering only the clean, final translation.
+
+---
+
 ## 🚀 Quick Start
 
 ### Option A: Run Pre-Built Portable Executable (Recommended)
@@ -226,6 +246,26 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | **Скриншот OCR** | Затемняет экран, делает снимок выделенной области, распознает текст через Vision LLM и переводит |
 | <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | **Перевести** | Запускает перевод в основном окне |
 | <kbd>Esc</kbd> | **Закрыть / Отмена** | Закрывает всплывающее окно или отменяет выделение фрагмента экрана |
+
+---
+
+## 🔌 Подключение локальных моделей (LM Studio и Ollama)
+
+Local Translator автоматически определяет и управляет локальными моделями искусственного интеллекта на вашем компьютере:
+
+### 1. Модели LM Studio
+* **Автоматическое обнаружение**: Переводчик самостоятельно сканирует каталог моделей LM Studio (`~/.lmstudio/models`) и опрашивает консольную утилиту `lms ls`.
+* **Выбор модели**: Откройте **Настройки** (⚙️) -> в блоке **LM Studio / Ollama** выберите модель из выпадающего списка. Для каждой модели отображается её источник и точный размер на диске в гигабайтах (например: `[LM Studio] Gemma 4 E2B (4.11 GB)`, `[LM Studio] Qwen 3.8 27B (16.52 GB)`).
+* **Фоновый Headless-автозапуск**: Вам не нужно держать открытым тяжелое графическое окно LM Studio! Если сервер выключен, Local Translator в фоновом режиме запускает службу (`lms server start`) и загружает выбранную модель в память (`lms load -y <модель>`).
+* **Предзагрузка в память**: Кнопка **▶ Загрузить в память** в настройках позволяет заранее отправить модель в VRAM видеокарты.
+
+### 2. Модели Ollama
+* **Автоматическое определение**: Переводчик определяет все скачанные модели Ollama через `ollama list` и локальный API (например: `[Ollama] qwen3:4b (2.33 GB)`).
+* **Автоподстановка порта**: При выборе модели Ollama адрес запросов автоматически переключается на порт `http://127.0.0.1:11434/v1`.
+* **Фоновый старт**: Если сервис Ollama не был запущен, переводчик самостоятельно поднимает `ollama serve` в фоне.
+
+### 3. Поддержка Reasoning-моделей
+* При работе с моделями рассуждений нового поколения (**Qwen 3**, **Gemma 4**, **DeepSeek-R1**) программа автоматически расширяет лимит токенов и вырезает скрытые блоки мыслей `<think>...</think>`, выводя в окно перевода только чистый результат.
 
 ---
 

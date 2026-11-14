@@ -71,7 +71,12 @@ filtered_binaries = []
 for b in a.binaries:
     b_dest = b[0].lower()
     b_src = b[1].lower() if len(b) > 1 and b[1] else ""
-    if any(k in b_dest or k in b_src for k in ['torch', 'c10', 'cublas', 'cudnn', 'nvrtc', 'torchaudio', 'torchvision']):
+    # Never filter ctranslate2 binaries (e.g. ctranslate2.dll, cudnn64_9.dll, libiomp5md.dll)
+    if "ctranslate2" in b_dest or "ctranslate2" in b_src:
+        filtered_binaries.append(b)
+        continue
+    # Filter out heavy torch CUDA runtime libraries (~3 GB)
+    if any(k in b_dest or k in b_src for k in ['torch', 'c10', 'cublas', 'nvrtc', 'torchaudio', 'torchvision']) or ('cudnn' in b_dest or 'cudnn' in b_src):
         continue
     filtered_binaries.append(b)
 a.binaries = filtered_binaries
