@@ -35,11 +35,14 @@ class ApplicationManager:
         # Connect Signals
         self.connect_signals()
 
-        # Start Hotkeys
-        hk_trans = config.get("hotkey_translate", "<ctrl>+q")
-        hk_repl = config.get("hotkey_replace", "<ctrl>+<shift>+q")
-        hk_ocr = config.get("hotkey_ocr", "<ctrl>+<shift>+s")
-        self.hotkey_service.start(hk_trans, hk_repl, hk_ocr)
+        # Start Hotkeys if enabled
+        if config.get("hotkeys_enabled", True):
+            hk_trans = config.get("hotkey_translate", "<ctrl>+q")
+            hk_repl = config.get("hotkey_replace", "<ctrl>+<shift>+q")
+            hk_ocr = config.get("hotkey_ocr", "<ctrl>+<shift>+s")
+            self.hotkey_service.start(hk_trans, hk_repl, hk_ocr)
+        else:
+            print("[Hotkey] Глобальные горячие клавиши отключены в настройках.")
 
         # Show main window if not starting minimized or requested via args
         start_minimized = "--minimized" in sys.argv or "--tray" in sys.argv or config.get("start_minimized", False)
@@ -56,8 +59,9 @@ class ApplicationManager:
         self.popup.open_main_requested.connect(self.on_popup_open_main)
         self.popup.replace_requested.connect(self.hotkey_service.paste_text)
 
-        # Main Window -> Tray
+        # Main Window -> Tray & Settings
         self.main_window.ui_language_changed.connect(self.tray.retranslate)
+        self.main_window.hotkeys_changed.connect(self.on_hotkeys_changed)
 
         # Tray -> Actions
         self.tray.show_main_requested.connect(self.show_main)
@@ -70,6 +74,13 @@ class ApplicationManager:
         lmstudio_translator.clear_cache()
         nllb_translator.clear_cache()
         self.tray.notify("Local Translator", tr("tray_cache_cleared"))
+
+    def on_hotkeys_changed(self):
+        enabled = config.get("hotkeys_enabled", True)
+        hk_trans = config.get("hotkey_translate", "<ctrl>+q")
+        hk_repl = config.get("hotkey_replace", "<ctrl>+<shift>+q")
+        hk_ocr = config.get("hotkey_ocr", "<ctrl>+<shift>+s")
+        self.hotkey_service.update_hotkeys(enabled, hk_trans, hk_repl, hk_ocr)
 
     def on_hotkey_translate(self, text: str):
         self.popup.show_at_cursor(text)

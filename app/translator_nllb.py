@@ -2,10 +2,24 @@ import os
 import re
 import time
 import ctranslate2
-from transformers import AutoTokenizer
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Any
 from app.config import config, LANGUAGES, APP_DIR
 from app.languages_data import get_nllb_code
+
+# Import NLLB tokenizer directly to ensure rock-solid standalone binary packaging
+try:
+    from transformers.models.nllb.tokenization_nllb import NllbTokenizer as TokenizerClass
+except Exception:
+    try:
+        from transformers import NllbTokenizer as TokenizerClass
+    except Exception:
+        try:
+            from transformers.models.auto.tokenization_auto import AutoTokenizer as TokenizerClass
+        except Exception:
+            try:
+                from transformers import AutoTokenizer as TokenizerClass
+            except Exception:
+                TokenizerClass = None
 
 
 def init_cuda_dlls():
@@ -40,7 +54,7 @@ class NLLBTranslator:
         else:
             self.model_path = os.path.abspath(cfg_path)
         self.translator: Optional[ctranslate2.Translator] = None
-        self.tokenizer: Optional[AutoTokenizer] = None
+        self.tokenizer: Optional[Any] = None
         self.device = "cpu"
         self.compute_type = "int8"
         self.is_loaded = False
@@ -89,14 +103,20 @@ class NLLBTranslator:
         should_try_cuda = desired_device == "cuda" or (desired_device == "auto" and self.check_cuda_available())
 
         try:
+            tok_cls = TokenizerClass
+            if tok_cls is None:
+                from transformers.models.nllb.tokenization_nllb import NllbTokenizer
+                tok_cls = NllbTokenizer
+
             # Load tokenizer from local files
-            self.tokenizer = AutoTokenizer.from_pretrained(
+            self.tokenizer = tok_cls.from_pretrained(
                 self.model_path,
                 local_files_only=True,
                 src_lang="rus_Cyrl"
             )
         except Exception as e:
             self.load_error = f"Ошибка токенизатора: {e}"
+            print(f"[NLLB] Ошибка токенизатора: {e}")
             return False
 
         # Try CUDA first if available

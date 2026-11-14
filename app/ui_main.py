@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit,
     QPushButton, QComboBox, QSplitter, QFrame, QDialog, QProgressBar,
     QMessageBox, QLineEdit, QCheckBox, QTabWidget, QGroupBox, QStatusBar,
-    QCompleter, QSizePolicy, QScrollArea
+    QCompleter, QSizePolicy, QScrollArea, QGridLayout, QKeySequenceEdit
 )
 from PyQt6.QtGui import QFont, QIcon, QColor, QKeySequence, QShortcut
 from app.config import config, LANGUAGES, is_port_listening
@@ -19,7 +19,10 @@ from app.i18n import tr, UI_LANGUAGES
 from app.translator_nllb import nllb_translator
 from app.translator_lmstudio import lmstudio_translator
 from app.model_downloader import ModelDownloader
-from app.hotkey_service import set_clipboard_text, get_clipboard_text
+from app.hotkey_service import (
+    set_clipboard_text, get_clipboard_text,
+    pynput_to_qt, qt_to_pynput
+)
 from app.ui_snippet import ScreenSnipper, pixmap_to_base64
 
 
@@ -116,7 +119,7 @@ class SettingsDialog(QDialog):
                 color: #cbd5e1;
                 font-size: 12px;
             }
-            QLineEdit, QComboBox {
+            QLineEdit, QComboBox, QKeySequenceEdit {
                 background-color: #212530;
                 color: #f8fafc;
                 border: 1px solid #334155;
@@ -124,7 +127,7 @@ class SettingsDialog(QDialog):
                 padding: 6px 10px;
                 font-size: 12px;
             }
-            QLineEdit:focus, QComboBox:focus {
+            QLineEdit:focus, QComboBox:focus, QKeySequenceEdit:focus {
                 border-color: #3b82f6;
             }
             QGroupBox {
@@ -306,9 +309,84 @@ class SettingsDialog(QDialog):
         self.hk_group = QGroupBox(tr("settings_hk_group"), self)
         hk_layout = QVBoxLayout(self.hk_group)
         hk_layout.setContentsMargins(12, 10, 12, 10)
+        hk_layout.setSpacing(10)
+
+        # Master Checkbox: enable/disable all hotkeys
+        self.hk_enabled_cb = QCheckBox(tr("settings_hk_enable"), self)
+        self.hk_enabled_cb.setChecked(config.get("hotkeys_enabled", True))
+        self.hk_enabled_cb.setStyleSheet("color: #f1f5f9; font-weight: 600; font-size: 12px;")
+        hk_layout.addWidget(self.hk_enabled_cb)
+
+        # Container for hotkey editors (disabled when master checkbox is unchecked)
+        self.hk_container = QWidget(self)
+        hk_grid = QGridLayout(self.hk_container)
+        hk_grid.setContentsMargins(0, 4, 0, 4)
+        hk_grid.setHorizontalSpacing(12)
+        hk_grid.setVerticalSpacing(8)
+
+        # Row 0: Popup Translate (Ctrl+Q)
+        self.lbl_hk_trans = QLabel(tr("settings_hk_trans"), self)
+        self.edit_hk_trans = QKeySequenceEdit(self)
+        self.edit_hk_trans.setMinimumHeight(32)
+        cur_trans = pynput_to_qt(config.get("hotkey_translate", "<ctrl>+q"))
+        self.edit_hk_trans.setKeySequence(QKeySequence(cur_trans))
+        hk_grid.addWidget(self.lbl_hk_trans, 0, 0)
+        hk_grid.addWidget(self.edit_hk_trans, 0, 1)
+
+        # Row 1: In-place Replace (Ctrl+Shift+Q)
+        self.lbl_hk_repl = QLabel(tr("settings_hk_replace"), self)
+        self.edit_hk_repl = QKeySequenceEdit(self)
+        self.edit_hk_repl.setMinimumHeight(32)
+        cur_repl = pynput_to_qt(config.get("hotkey_replace", "<ctrl>+<shift>+q"))
+        self.edit_hk_repl.setKeySequence(QKeySequence(cur_repl))
+        hk_grid.addWidget(self.lbl_hk_repl, 1, 0)
+        hk_grid.addWidget(self.edit_hk_repl, 1, 1)
+
+        # Row 2: OCR Snippet (Ctrl+Shift+S)
+        self.lbl_hk_ocr = QLabel(tr("settings_hk_ocr"), self)
+        self.edit_hk_ocr = QKeySequenceEdit(self)
+        self.edit_hk_ocr.setMinimumHeight(32)
+        cur_ocr = pynput_to_qt(config.get("hotkey_ocr", "<ctrl>+<shift>+s"))
+        self.edit_hk_ocr.setKeySequence(QKeySequence(cur_ocr))
+        hk_grid.addWidget(self.lbl_hk_ocr, 2, 0)
+        hk_grid.addWidget(self.edit_hk_ocr, 2, 1)
+
+        # Row 3: Reset to defaults button
+        h_reset = QHBoxLayout()
+        self.reset_hk_btn = QPushButton(f"↺ {tr('settings_hk_reset')}", self)
+        self.reset_hk_btn.setMinimumHeight(28)
+        self.reset_hk_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.reset_hk_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #94a3b8;
+                border: 1px solid #334155;
+                border-radius: 5px;
+                padding: 4px 12px;
+                font-size: 11px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                color: #f1f5f9;
+            }
+        """)
+        self.reset_hk_btn.clicked.connect(self.reset_hotkeys_to_default)
+        h_reset.addWidget(self.reset_hk_btn)
+        h_reset.addStretch()
+        hk_grid.addLayout(h_reset, 3, 0, 1, 2)
+
+        hk_layout.addWidget(self.hk_container)
+
+        # Connect master checkbox to enable/disable container
+        self.hk_container.setEnabled(self.hk_enabled_cb.isChecked())
+        self.hk_enabled_cb.toggled.connect(self.hk_container.setEnabled)
+
+        # Info text
         self.hk_info = QLabel(tr("settings_hk_info"), self)
-        self.hk_info.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        self.hk_info.setStyleSheet("color: #64748b; font-size: 11px; margin-top: 2px;")
         hk_layout.addWidget(self.hk_info)
+
         layout.addWidget(self.hk_group)
 
         # 5. Tray & Startup Group
@@ -369,6 +447,11 @@ class SettingsDialog(QDialog):
             if self.parent() and hasattr(self.parent(), "retranslate_ui"):
                 self.parent().retranslate_ui()
 
+    def reset_hotkeys_to_default(self):
+        self.edit_hk_trans.setKeySequence(QKeySequence("Ctrl+Q"))
+        self.edit_hk_repl.setKeySequence(QKeySequence("Ctrl+Shift+Q"))
+        self.edit_hk_ocr.setKeySequence(QKeySequence("Ctrl+Shift+S"))
+
     def retranslate_ui(self):
         self.setWindowTitle(tr("settings_title"))
         self.lang_group.setTitle(tr("settings_ui_lang"))
@@ -380,6 +463,11 @@ class SettingsDialog(QDialog):
         self.dev_lbl.setText(tr("settings_device"))
         self.proxy_lbl.setText(tr("settings_proxy"))
         self.hk_group.setTitle(tr("settings_hk_group"))
+        self.hk_enabled_cb.setText(tr("settings_hk_enable"))
+        self.lbl_hk_trans.setText(tr("settings_hk_trans"))
+        self.lbl_hk_repl.setText(tr("settings_hk_replace"))
+        self.lbl_hk_ocr.setText(tr("settings_hk_ocr"))
+        self.reset_hk_btn.setText(f"↺ {tr('settings_hk_reset')}")
         self.hk_info.setText(tr("settings_hk_info"))
         self.tray_group.setTitle(tr("settings_tray_group"))
         self.min_to_tray_cb.setText(tr("settings_min_to_tray"))
@@ -420,6 +508,28 @@ class SettingsDialog(QDialog):
         config.set("minimize_to_tray", self.min_to_tray_cb.isChecked())
         config.set("start_minimized", self.start_min_cb.isChecked())
         config.set("ui_language", self.ui_lang_combo.currentData() or "en")
+
+        # Hotkeys
+        config.set("hotkeys_enabled", self.hk_enabled_cb.isChecked())
+
+        seq_trans = self.edit_hk_trans.keySequence().toString()
+        if seq_trans:
+            pynput_trans = qt_to_pynput(seq_trans)
+            if pynput_trans:
+                config.set("hotkey_translate", pynput_trans)
+
+        seq_repl = self.edit_hk_repl.keySequence().toString()
+        if seq_repl:
+            pynput_repl = qt_to_pynput(seq_repl)
+            if pynput_repl:
+                config.set("hotkey_replace", pynput_repl)
+
+        seq_ocr = self.edit_hk_ocr.keySequence().toString()
+        if seq_ocr:
+            pynput_ocr = qt_to_pynput(seq_ocr)
+            if pynput_ocr:
+                config.set("hotkey_ocr", pynput_ocr)
+
         if old_dev != new_dev:
             nllb_translator.reload_model()
         self.accept()
@@ -702,6 +812,7 @@ class SearchableLanguageComboBox(QComboBox):
 
 class MainWindow(QMainWindow):
     ui_language_changed = pyqtSignal()
+    hotkeys_changed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -1206,7 +1317,8 @@ class MainWindow(QMainWindow):
         # Shortcuts
         QShortcut(QKeySequence("Ctrl+Return"), self, self.trigger_translation)
         QShortcut(QKeySequence("Ctrl+Enter"), self, self.trigger_translation)
-        QShortcut(QKeySequence("Ctrl+Shift+S"), self, self.start_screen_ocr)
+        ocr_seq = pynput_to_qt(config.get("hotkey_ocr", "<ctrl>+<shift>+s"))
+        self.ocr_shortcut = QShortcut(QKeySequence(ocr_seq), self, self.start_screen_ocr)
 
         # Input typing debounce timer
         self.debounce_timer = QTimer(self)
@@ -1550,6 +1662,10 @@ class MainWindow(QMainWindow):
         dlg = SettingsDialog(self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             self.check_backends_status()
+            self.hotkeys_changed.emit()
+            if hasattr(self, "ocr_shortcut") and self.ocr_shortcut:
+                ocr_seq = pynput_to_qt(config.get("hotkey_ocr", "<ctrl>+<shift>+s"))
+                self.ocr_shortcut.setKey(QKeySequence(ocr_seq))
 
     # --- OCR / Snippet Capture Methods ---
 

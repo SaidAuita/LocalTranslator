@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QThread
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QThread, QEvent
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit,
     QPushButton, QComboBox, QGraphicsDropShadowEffect, QApplication
@@ -202,6 +202,7 @@ class FloatingPopup(QWidget):
             }
         """)
         card_layout.addWidget(self.trans_text)
+        self.trans_text.installEventFilter(self)
 
         # Bottom Bar
         bottom = QHBoxLayout()
@@ -267,6 +268,7 @@ class FloatingPopup(QWidget):
         self.orig_lbl.setText(f"Исходный: {snippet}")
         self.trans_text.setPlainText("⏳ Перевод...")
         self.latency_lbl.setText("")
+        self.copy_btn.setText("Копировать (Enter)")
 
         # Position near mouse cursor, preventing overflow off screen
         cursor_pos = QCursor.pos()
@@ -308,26 +310,60 @@ class FloatingPopup(QWidget):
             self.latency_lbl.setText(f"⚡ {lat:.0f} ms")
             if engine_str:
                 self.engine_pill.setText(engine_str.split("(")[0].strip())
+            if config.get("auto_copy_translation", False):
+                set_clipboard_text(res)
+                self.copy_btn.setText("Скопировано! ✓")
 
     def on_lang_changed(self):
         if self.original_text:
             self.start_translation()
 
     def copy_translation(self):
-        if self.translated_text:
-            set_clipboard_text(self.translated_text)
+        text = self.translated_text
+        if not text:
+            cursor = self.trans_text.textCursor()
+            if cursor.hasSelection():
+                text = cursor.selectedText()
+            else:
+                text = self.trans_text.toPlainText().strip()
+                if text.startswith("⏳") or text.startswith("❌"):
+                    return
+        if text:
+            set_clipboard_text(text)
             self.copy_btn.setText("Скопировано! ✓")
             if config.get("close_popup_on_copy", True):
                 self.hide()
 
     def replace_original(self):
-        if self.translated_text:
-            self.replace_requested.emit(self.translated_text)
+        text = self.translated_text or self.trans_text.toPlainText().strip()
+        if text and not text.startswith("⏳") and not text.startswith("❌"):
+            self.replace_requested.emit(text)
             self.hide()
 
     def open_main(self):
         self.hide()
         self.open_main_requested.emit()
+
+    def eventFilter(self, obj, event):
+        if obj == self.trans_text and event.type() == QEvent.Type.KeyPress:
+            if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                self.copy_translation()
+                return True
+            elif event.key() == Qt.Key.Key_Escape:
+                self.hide()
+                return True
+        return super().eventFilter(obj, event)
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.copy_translation()
+            event.accept()
+            return
+        elif event.key() == Qt.Key.Key_Escape:
+            self.hide()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     # Window drag support
     def mousePressEvent(self, event):

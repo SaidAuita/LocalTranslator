@@ -17,6 +17,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "lm_studio_url": "http://127.0.0.1:1234/v1",
     "lm_studio_model": "",
     "lm_studio_temperature": 0.2,
+    "hotkeys_enabled": True,
     "hotkey_translate": "<ctrl>+q",
     "hotkey_replace": "<ctrl>+<shift>+q",
     "hotkey_ocr": "<ctrl>+<shift>+s",

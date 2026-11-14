@@ -17,7 +17,9 @@ hiddenimports = [
     'certifi',
     'transformers',
     'transformers.models.nllb',
+    'transformers.models.nllb.tokenization_nllb',
     'transformers.models.auto',
+    'transformers.models.auto.tokenization_auto',
     'sentencepiece',
     'tokenizers',
     'app.languages_data',
@@ -62,6 +64,25 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False,
 )
+
+# Filter out heavy unneeded libraries (torch, etc.) from binaries and datas
+filtered_binaries = []
+for b in a.binaries:
+    b_dest = b[0].lower()
+    b_src = b[1].lower() if len(b) > 1 and b[1] else ""
+    if any(k in b_dest or k in b_src for k in ['torch', 'c10', 'cublas', 'cudnn', 'nvrtc', 'torchaudio', 'torchvision']):
+        continue
+    filtered_binaries.append(b)
+a.binaries = filtered_binaries
+
+filtered_datas = []
+for d in a.datas:
+    d_dest = d[0].lower()
+    d_src = d[1].lower() if len(d) > 1 and d[1] else ""
+    if any(k in d_dest or k in d_src for k in ['torch', 'torchaudio', 'torchvision']):
+        continue
+    filtered_datas.append(d)
+a.datas = filtered_datas
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 

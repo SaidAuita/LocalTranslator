@@ -96,7 +96,7 @@
 ## 🚀 Quick Start
 
 ### Option A: Run Pre-Built Portable Executable (Recommended)
-1. Download **[LocalTranslator-v1.0.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** from the latest GitHub Release.
+1. Download **[LocalTranslator-v1.1.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** from the latest GitHub Release.
 2. Extract the archive into any folder on your PC.
 3. Run `LocalTranslator.exe`.
 4. If the NLLB model is not yet downloaded, click the **Download 1.3B Model** banner in the UI (downloads ~1.38 GB directly with pause/resume support).
@@ -228,7 +228,7 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 ## 🚀 Быстрый старт
 
 ### Вариант A: Готовый исполняемый файл .EXE (Рекомендуется)
-1. Скачайте архив **[LocalTranslator-v1.0.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** из раздела [Releases](https://github.com/SaidAuita/LocalTranslator/releases).
+1. Скачайте архив **[LocalTranslator-v1.1.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** из раздела [Releases](https://github.com/SaidAuita/LocalTranslator/releases).
 2. Распакуйте архив в любую папку на вашем компьютере.
 3. Запустите `LocalTranslator.exe`.
 4. При первом запуске нажмите кнопку загрузки модели NLLB 1.3B (~1.38 ГБ) прямо в окне приложения (скачивается в 1 клик с поддержкой докачки).
