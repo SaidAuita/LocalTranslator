@@ -46,9 +46,11 @@
 * Accelerated by **CTranslate2** with NVIDIA CUDA (GPU) or optimized CPU INT8 execution.
 * Near-instant translation with typical latencies of **30–80 ms** on modern GPUs.
 
-### 2. 🤖 LM Studio Integration (Local LLMs)
-* Connects directly to LM Studio’s OpenAI-compatible local API server (`http://127.0.0.1:1234/v1`).
-* Use any loaded LLM (Qwen 2.5, DeepSeek, Llama 3, Gemma 2, Mistral, etc.) with smart translation prompting and automatic fallback.
+### 2. 🤖 Local LLMs: LM Studio & Ollama Integration (with Auto-Discovery)
+* **Model Auto-Discovery**: Automatically scans and lists all downloaded models from LM Studio (`~/.lmstudio/models`) and Ollama with their exact disk size (GB).
+* **Headless Background Auto-Start**: If LM Studio or Ollama is offline, Local Translator automatically launches the server and loads the selected model into memory (`lms load`) without needing to open heavy Electron interfaces.
+* **Reasoning Models Support**: Built-in intelligent filtration for modern thinking models (Qwen 3, Gemma 4, DeepSeek-R1) stripping `<think>...</think>` internal blocks to ensure clean, instant translation output.
+* Compatible with standard OpenAI API endpoints (`http://127.0.0.1:1234/v1` and `http://127.0.0.1:11434/v1`).
 
 ### 3. ⚖️ Side-by-Side Dual Model Comparison (2 Models)
 * Translates text with both **NLLB-200** and **LM Studio** simultaneously.
@@ -96,7 +98,7 @@
 ## 🚀 Quick Start
 
 ### Option A: Run Pre-Built Portable Executable (Recommended)
-1. Download **[LocalTranslator-v1.1.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** from the latest GitHub Release.
+1. Download **[LocalTranslator-v1.2.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** from the latest GitHub Release.
 2. Extract the archive into any folder on your PC.
 3. Run `LocalTranslator.exe`.
 4. If the NLLB model is not yet downloaded, click the **Download 1.3B Model** banner in the UI (downloads ~1.38 GB directly with pause/resume support).
@@ -181,9 +183,11 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 * Аппаратное ускорение **CTranslate2** через NVIDIA CUDA (RTX / GTX) или оптимизированный CPU INT8.
 * Время отклика: всего **30–80 мс** на современных видеокартах.
 
-### 2. 🤖 Интеграция с LM Studio (Локальные LLM)
-* Подключение к локальному серверу LM Studio по OpenAI-совместимому API (`http://127.0.0.1:1234/v1`).
-* Поддержка любых моделей (Qwen 2.5, DeepSeek, Llama 3, Gemma 2, Mistral и др.) со строгим системным промптом и автоподхватом активной модели.
+### 2. 🤖 Локальные LLM: Интеграция с LM Studio и Ollama (Автоопределение моделей)
+* **Автоопределение моделей**: Автоматическое сканирование каталога моделей LM Studio (`~/.lmstudio/models`) и сервиса Ollama с отображением размера каждой модели в гигабайтах (GB).
+* **Умный Headless-автозапуск**: Если LM Studio или Ollama выключены, переводчик автоматически поднимает консольный сервер и загружает выбранную модель в память (`lms load`) в фоновом режиме без необходимости открывать тяжелое графическое окно приложения.
+* **Поддержка Reasoning-моделей**: Автоматическая очистка блоков размышлений `<think>...</think>` для моделей нового поколения (Qwen 3, Gemma 4, DeepSeek-R1) — в результат попадает только чистый перевод.
+* Совместимость с любыми OpenAI-совместимыми эндпоинтами (`http://127.0.0.1:1234/v1` и `http://127.0.0.1:11434/v1`).
 
 ### 3. ⚖️ Сравнение двух моделей Side-by-Side (2 Models)
 * Одновременный параллельный перевод текста в **NLLB 1.3B** и **LM Studio**.
@@ -228,7 +232,7 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 ## 🚀 Быстрый старт
 
 ### Вариант A: Готовый исполняемый файл .EXE (Рекомендуется)
-1. Скачайте архив **[LocalTranslator-v1.1.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** из раздела [Releases](https://github.com/SaidAuita/LocalTranslator/releases).
+1. Скачайте архив **[LocalTranslator-v1.2.0-windows-x64.zip](https://github.com/SaidAuita/LocalTranslator/releases/latest)** из раздела [Releases](https://github.com/SaidAuita/LocalTranslator/releases).
 2. Распакуйте архив в любую папку на вашем компьютере.
 3. Запустите `LocalTranslator.exe`.
 4. При первом запуске нажмите кнопку загрузки модели NLLB 1.3B (~1.38 ГБ) прямо в окне приложения (скачивается в 1 клик с поддержкой докачки).

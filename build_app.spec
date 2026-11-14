@@ -28,6 +28,7 @@ hiddenimports = [
     'app.ui_tray',
     'app.ui_popup',
     'app.hotkey_service',
+    'app.local_models',
 ]
 
 # Collect ctranslate2 package and DLLs

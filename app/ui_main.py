@@ -212,18 +212,74 @@ class SettingsDialog(QDialog):
         lang_layout.addWidget(self.ui_lang_combo)
         layout.addWidget(self.lang_group)
 
-        # 2. LM Studio Group
+        # 2. LM Studio / Local LLM Group
         self.lms_group = QGroupBox(tr("settings_lms_group"), self)
         lms_layout = QVBoxLayout(self.lms_group)
         lms_layout.setContentsMargins(12, 10, 12, 10)
         lms_layout.setSpacing(8)
 
+        # Model Selector
+        self.lms_model_lbl = QLabel(tr("settings_lms_model_select"), self)
+        lms_layout.addWidget(self.lms_model_lbl)
+        self.lms_model_combo = QComboBox(self)
+        self.lms_model_combo.setMinimumHeight(34)
+        self.lms_model_combo.currentIndexChanged.connect(self.on_lms_model_changed)
+        lms_layout.addWidget(self.lms_model_combo)
+
+        # Model Action Buttons (Refresh & Load)
+        h_model_btns = QHBoxLayout()
+        h_model_btns.setSpacing(10)
+        self.refresh_models_btn = QPushButton(tr("settings_lms_refresh_btn"), self)
+        self.refresh_models_btn.setMinimumHeight(30)
+        self.refresh_models_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.refresh_models_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #94a3b8;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                padding: 4px 12px;
+                font-weight: 600;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                color: #f8fafc;
+            }
+        """)
+        self.refresh_models_btn.clicked.connect(self.refresh_local_models)
+        h_model_btns.addWidget(self.refresh_models_btn)
+
+        self.load_model_btn = QPushButton(tr("settings_lms_load_btn"), self)
+        self.load_model_btn.setMinimumHeight(30)
+        self.load_model_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.load_model_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #c084fc;
+                border: 1px solid #9333ea;
+                border-radius: 6px;
+                padding: 4px 12px;
+                font-weight: 600;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #581c87;
+                color: #ffffff;
+            }
+        """)
+        self.load_model_btn.clicked.connect(self.load_selected_model)
+        h_model_btns.addWidget(self.load_model_btn)
+        lms_layout.addLayout(h_model_btns)
+
+        # Server URL
         self.lms_url_lbl = QLabel(tr("settings_lms_url"), self)
         lms_layout.addWidget(self.lms_url_lbl)
         self.lms_url = QLineEdit(config.get("lm_studio_url", "http://127.0.0.1:1234/v1"))
         self.lms_url.setMinimumHeight(34)
         lms_layout.addWidget(self.lms_url)
 
+        # Server Action Buttons (Test & Start)
         h_lms = QHBoxLayout()
         h_lms.setSpacing(10)
         self.test_lms_btn = QPushButton(f"🔍 {tr('settings_test_btn')}", self)
@@ -269,10 +325,19 @@ class SettingsDialog(QDialog):
         h_lms.addWidget(self.start_lms_btn)
         lms_layout.addLayout(h_lms)
 
+        # Auto-start Checkbox
+        self.auto_start_lms_cb = QCheckBox(tr("settings_auto_start_lms"), self)
+        self.auto_start_lms_cb.setChecked(config.get("auto_start_local_server", True))
+        self.auto_start_lms_cb.setStyleSheet("color: #cbd5e1; font-size: 11px;")
+        lms_layout.addWidget(self.auto_start_lms_cb)
+
         self.lms_status_lbl = QLabel("", self)
         self.lms_status_lbl.setWordWrap(True)
         lms_layout.addWidget(self.lms_status_lbl)
         layout.addWidget(self.lms_group)
+
+        # Populate model dropdown
+        self.populate_local_models()
 
         # 3. Local Engine Group
         self.nllb_group = QGroupBox(tr("settings_nllb_group"), self)
@@ -452,10 +517,91 @@ class SettingsDialog(QDialog):
         self.edit_hk_repl.setKeySequence(QKeySequence("Ctrl+Shift+Q"))
         self.edit_hk_ocr.setKeySequence(QKeySequence("Ctrl+Shift+S"))
 
+    def populate_local_models(self):
+        self.lms_model_combo.blockSignals(True)
+        self.lms_model_combo.clear()
+
+        from app.local_models import get_all_local_models, get_active_lms_model
+        models = get_all_local_models()
+        active_model = get_active_lms_model()
+        configured_model = config.get("lm_studio_model", "")
+
+        selected_idx = 0
+        for idx, m in enumerate(models):
+            badge = "[LM Studio]" if m.get("backend") == "lmstudio" else "[Ollama]"
+            item_text = f"{badge} {m['name']} ({m['size_str']})"
+            if m["id"] == active_model:
+                item_text += " [В памяти]"
+            self.lms_model_combo.addItem(item_text, m)
+            if configured_model and (m["id"] == configured_model or configured_model in m["id"]):
+                selected_idx = idx
+
+        # Manual / Custom entry
+        self.lms_model_combo.addItem(tr("settings_lms_model_manual"), {
+            "id": "",
+            "backend": "custom",
+            "url": self.lms_url.text().strip() or "http://127.0.0.1:1234/v1"
+        })
+        if not configured_model and models:
+            selected_idx = 0
+        elif not configured_model and not models:
+            selected_idx = self.lms_model_combo.count() - 1
+
+        self.lms_model_combo.setCurrentIndex(selected_idx)
+        self.lms_model_combo.blockSignals(False)
+
+    def on_lms_model_changed(self, index: int):
+        data = self.lms_model_combo.currentData()
+        if not data:
+            return
+        backend = data.get("backend", "lmstudio")
+        if backend == "ollama":
+            self.lms_url.setText("http://127.0.0.1:11434/v1")
+        elif backend == "lmstudio":
+            self.lms_url.setText("http://127.0.0.1:1234/v1")
+
+    def refresh_local_models(self):
+        self.lms_status_lbl.setText("Поиск локальных моделей...")
+        self.lms_status_lbl.setStyleSheet("color: #38bdf8;")
+        QApplication.processEvents()
+        self.populate_local_models()
+        count = max(0, self.lms_model_combo.count() - 1)
+        self.lms_status_lbl.setText(f"✓ Найдено моделей: {count}")
+        self.lms_status_lbl.setStyleSheet("color: #10b981;")
+
+    def load_selected_model(self):
+        data = self.lms_model_combo.currentData()
+        if not data:
+            return
+        model_id = data.get("id")
+        backend = data.get("backend", "lmstudio")
+        if not model_id:
+            self.lms_status_lbl.setText("Выберите конкретную модель из списка.")
+            self.lms_status_lbl.setStyleSheet("color: #f59e0b;")
+            return
+
+        self.lms_status_lbl.setText(f"Загрузка '{model_id}' в память...")
+        self.lms_status_lbl.setStyleSheet("color: #38bdf8;")
+        QApplication.processEvents()
+
+        from app.local_models import ensure_model_ready
+        ok, msg, url = ensure_model_ready(model_id, backend=backend)
+        if ok:
+            self.lms_status_lbl.setText(f"✓ {msg}")
+            self.lms_status_lbl.setStyleSheet("color: #10b981; font-weight: bold;")
+            self.test_lms()
+        else:
+            self.lms_status_lbl.setText(f"✕ {msg}")
+            self.lms_status_lbl.setStyleSheet("color: #ef4444; font-weight: bold;")
+
     def retranslate_ui(self):
         self.setWindowTitle(tr("settings_title"))
         self.lang_group.setTitle(tr("settings_ui_lang"))
         self.lms_group.setTitle(tr("settings_lms_group"))
+        self.lms_model_lbl.setText(tr("settings_lms_model_select"))
+        self.refresh_models_btn.setText(tr("settings_lms_refresh_btn"))
+        self.load_model_btn.setText(tr("settings_lms_load_btn"))
+        self.auto_start_lms_cb.setText(tr("settings_auto_start_lms"))
         self.lms_url_lbl.setText(tr("settings_lms_url"))
         self.test_lms_btn.setText(f"🔍 {tr('settings_test_btn')}")
         self.start_lms_btn.setText(tr("settings_start_lms_btn"))
@@ -480,17 +626,27 @@ class SettingsDialog(QDialog):
         lmstudio_translator.base_url = url
         is_on, model, models = lmstudio_translator.check_connection()
         if is_on:
-            self.lms_status_lbl.setText(f"✓ Подключено! Загруженная модель: {model}")
+            loaded_info = f", модель: {model}" if model else ""
+            self.lms_status_lbl.setText(f"✓ Подключено к {url}{loaded_info}")
             self.lms_status_lbl.setStyleSheet("color: #10b981; font-weight: bold;")
         else:
-            self.lms_status_lbl.setText("✕ Сервер LM Studio недоступен.")
+            self.lms_status_lbl.setText(f"✕ Сервер недоступен ({url}).")
             self.lms_status_lbl.setStyleSheet("color: #ef4444; font-weight: bold;")
 
     def start_lms(self):
-        self.lms_status_lbl.setText("Запуск сервера через lms CLI...")
+        data = self.lms_model_combo.currentData() or {}
+        backend = data.get("backend", "lmstudio")
+        self.lms_status_lbl.setText("Запуск сервера...")
         self.lms_status_lbl.setStyleSheet("color: #38bdf8;")
         QApplication.processEvents()
-        ok, msg = lmstudio_translator.start_server_via_lms()
+
+        if backend == "ollama":
+            from app.local_models import start_ollama_server
+            ok, msg = start_ollama_server()
+        else:
+            from app.local_models import start_lms_server
+            ok, msg = start_lms_server()
+
         if ok:
             self.lms_status_lbl.setText("✓ " + msg)
             self.lms_status_lbl.setStyleSheet("color: #10b981;")
@@ -500,7 +656,14 @@ class SettingsDialog(QDialog):
             self.lms_status_lbl.setStyleSheet("color: #ef4444;")
 
     def save_settings(self):
+        data = self.lms_model_combo.currentData() or {}
+        model_id = data.get("id", "")
+        backend = data.get("backend", "auto")
+        config.set("lm_studio_model", model_id)
+        config.set("local_model_backend", backend)
+        config.set("auto_start_local_server", self.auto_start_lms_cb.isChecked())
         config.set("lm_studio_url", self.lms_url.text().strip())
+
         old_dev = config.get("device", "auto")
         new_dev = self.device_combo.currentData()
         config.set("device", new_dev)
@@ -1350,15 +1513,26 @@ class MainWindow(QMainWindow):
             self.status_nllb_lbl.setText(tr("status_nllb_missing"))
             self.status_nllb_lbl.setStyleSheet("color: #f59e0b; font-weight: 500;")
 
-        # 2. Check LM Studio
+        # 2. Check Local LLM (LM Studio / Ollama)
         is_on, model, _ = lmstudio_translator.check_connection()
+        configured_model = config.get("lm_studio_model", "")
+        backend = config.get("local_model_backend", "auto")
+        backend_name = "Ollama" if backend == "ollama" or ":11434" in config.get("lm_studio_url", "") else "LM Studio"
+
         if is_on:
-            self.status_lms_lbl.setText(tr("status_lms_ready").format(model=model))
+            m_name = model or configured_model or "ready"
+            self.status_lms_lbl.setText(f"✓ {backend_name}: {m_name}")
             self.status_lms_lbl.setStyleSheet("color: #10b981; font-weight: 500;")
-            self.compare_lms_title.setText(f"🤖 LM Studio ({model})")
+            self.compare_lms_title.setText(f"🤖 {backend_name} ({m_name})")
         else:
-            self.status_lms_lbl.setText(tr("status_lms_offline"))
-            self.status_lms_lbl.setStyleSheet("color: #94a3b8;")
+            if config.get("auto_start_local_server", True) and configured_model:
+                self.status_lms_lbl.setText(f"💤 {backend_name}: авто ({configured_model})")
+                self.status_lms_lbl.setStyleSheet("color: #38bdf8; font-weight: 500;")
+                self.compare_lms_title.setText(f"🤖 {backend_name} ({configured_model})")
+            else:
+                self.status_lms_lbl.setText(tr("status_lms_offline"))
+                self.status_lms_lbl.setStyleSheet("color: #94a3b8;")
+                self.compare_lms_title.setText(f"🤖 {backend_name}")
 
     def retranslate_ui(self):
         self.setWindowTitle(tr("app_title"))

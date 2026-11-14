@@ -16,6 +16,8 @@
   "lm_studio_url": "http://127.0.0.1:1234/v1",
   "lm_studio_model": "",
   "lm_studio_temperature": 0.2,
+  "local_model_backend": "auto",
+  "auto_start_local_server": true,
   "hotkeys_enabled": true,
   "hotkey_translate": "<ctrl>+q",
   "hotkey_replace": "<ctrl>+<shift>+q",

@@ -5,6 +5,8 @@ from typing import Dict, Any
 
 from app.languages_data import LANGUAGES, get_nllb_code, get_language_info, get_display_name
 
+APP_VERSION = "1.2.0"
+
 DEFAULT_CONFIG: Dict[str, Any] = {
     "engine": "compare",  # "nllb" | "lmstudio" | "compare"
     "source_lang": "auto",
@@ -17,6 +19,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "lm_studio_url": "http://127.0.0.1:1234/v1",
     "lm_studio_model": "",
     "lm_studio_temperature": 0.2,
+    "local_model_backend": "auto",  # "auto" | "lmstudio" | "ollama" | "custom"
+    "auto_start_local_server": True,
     "hotkeys_enabled": True,
     "hotkey_translate": "<ctrl>+q",
     "hotkey_replace": "<ctrl>+<shift>+q",

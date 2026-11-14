@@ -5,6 +5,7 @@ import re
 from typing import Tuple, List, Optional
 from app.config import config, LANGUAGES
 from app.languages_data import get_language_info
+from app.local_models import ensure_model_ready, start_lms_server, get_active_lms_model
 
 
 class LMStudioTranslator:
@@ -23,22 +24,23 @@ class LMStudioTranslator:
 
     def check_connection(self) -> Tuple[bool, str, List[str]]:
         """
-        Check if LM Studio is reachable and fetch available models.
+        Check if local LLM server (LM Studio / Ollama) is reachable and fetch available models.
         Returns: (is_online, current_or_first_model_name, list_of_models)
         """
+        self.base_url = config.get("lm_studio_url", "http://127.0.0.1:1234/v1").rstrip("/")
         try:
             # Fast socket pre-check to avoid waiting for HTTP timeout if server is off
             import urllib.parse
             parsed = urllib.parse.urlparse(self.base_url)
             host = parsed.hostname or "127.0.0.1"
-            port = parsed.port or 1234
+            port = parsed.port or (11434 if ":11434" in self.base_url else 1234)
             from app.config import is_port_listening
-            if not is_port_listening(host, port, timeout=0.1):
+            if not is_port_listening(host, port, timeout=0.15):
                 return False, "", []
 
             url = self.get_api_url("models")
             # Bypass system proxy for local loopback connections
-            resp = requests.get(url, timeout=1.0, proxies={"http": None, "https": None})
+            resp = requests.get(url, timeout=1.5, proxies={"http": None, "https": None})
             if resp.status_code == 200:
                 data = resp.json()
                 models = [m.get("id", "") for m in data.get("data", []) if m.get("id")]
@@ -52,15 +54,7 @@ class LMStudioTranslator:
 
     def start_server_via_lms(self) -> Tuple[bool, str]:
         """Attempt to launch LM Studio server using 'lms server start'."""
-        try:
-            res = subprocess.run(["lms", "server", "start"], capture_output=True, text=True, timeout=10)
-            if res.returncode == 0 or "already running" in res.stdout.lower() or "port 1234" in res.stdout.lower():
-                return True, "Сервер LM Studio запущен успешно."
-            return False, res.stderr or res.stdout
-        except FileNotFoundError:
-            return False, "Команда 'lms' не найдена в PATH. Запустите LM Studio вручную."
-        except Exception as e:
-            return False, f"Ошибка запуска: {e}"
+        return start_lms_server()
 
     def detect_lang_names(self, text: str, src: str, tgt: str) -> Tuple[str, str]:
         """Resolve human-readable language names for prompting."""
@@ -106,6 +100,20 @@ class LMStudioTranslator:
         # Retrieve model
         model_to_use = config.get("lm_studio_model") or self.last_detected_model or "local-model"
 
+        # Auto-start server and load model if offline or needed
+        if config.get("auto_start_local_server", True):
+            backend = config.get("local_model_backend", "auto")
+            ok, msg, eff_url = ensure_model_ready(model_to_use, backend=backend)
+            if ok and eff_url:
+                self.base_url = eff_url
+
+        # Auto-start server and load model if offline or needed
+        if config.get("auto_start_local_server", True):
+            backend = config.get("local_model_backend", "auto")
+            ok, msg, eff_url = ensure_model_ready(model_to_use, backend=backend)
+            if ok and eff_url:
+                self.base_url = eff_url
+
         # Check in-memory cache to prevent duplicate slow calls and llama.cpp prefix-cache reuse issues
         cache_key = (clean_text, src_lang, tgt_lang, model_to_use)
         if not force_refresh and cache_key in self._cache:
@@ -116,14 +124,14 @@ class LMStudioTranslator:
             f"You are a professional translator. Translate the text from {s_name} to {t_name}.\n"
             "Requirements:\n"
             "- Output ONLY the direct translation.\n"
-            "- Do NOT add explanations, notes, greetings, or conversational filler.\n"
+            "- Do NOT include <think> tags, explanations, notes, greetings, or conversational filler.\n"
             "- Preserve original formatting, bullet points, and technical terms."
         )
 
         user_content = f"Translate the following text to {t_name}:\n\n{clean_text}"
 
         word_count = len(clean_text.split())
-        estimated_max_tokens = max(256, min(4096, word_count * 4 + 128))
+        estimated_max_tokens = max(4096, min(16384, word_count * 8 + 4096))
 
         payload = {
             "model": model_to_use,
@@ -155,10 +163,30 @@ class LMStudioTranslator:
             if not choices:
                 raise RuntimeError("LM Studio вернул пустой ответ.")
 
-            raw_translation = choices[0].get("message", {}).get("content", "").strip()
+            msg = choices[0].get("message", {})
+            raw_translation = msg.get("content", "").strip()
+
+            # If content is empty but model produced reasoning, extract from reasoning
+            if not raw_translation:
+                reasoning = msg.get("reasoning", "") or msg.get("reasoning_content", "")
+                if reasoning:
+                    quotes = re.findall(r'["«]([^"»\n]{2,})["»]', reasoning)
+                    if quotes:
+                        raw_translation = quotes[-1].strip()
+
+            clean_translation = raw_translation
+            # Remove reasoning <think> ... </think> blocks (used by Qwen 3, DeepSeek, etc.)
+            if "<think>" in clean_translation:
+                if "</think>" in clean_translation:
+                    clean_translation = re.sub(r"<think>.*?</think>", "", clean_translation, flags=re.DOTALL).strip()
+                else:
+                    quotes = re.findall(r'["«]([^"»\n]{2,})["»]', clean_translation)
+                    if quotes:
+                        clean_translation = quotes[-1].strip()
+                    else:
+                        clean_translation = clean_translation.replace("<think>", "").strip()
 
             # Clean any accidental outer markdown fences or quotes
-            clean_translation = raw_translation
             if clean_translation.startswith("```") and clean_translation.endswith("```"):
                 lines = clean_translation.split("\n")
                 if len(lines) >= 3:
@@ -195,6 +223,13 @@ class LMStudioTranslator:
             return "", 0.0, ""
 
         model_to_use = config.get("lm_studio_model") or self.last_detected_model or "local-model"
+
+        # Auto-start server and load model if offline or needed
+        if config.get("auto_start_local_server", True):
+            backend = config.get("local_model_backend", "auto")
+            ok, msg, eff_url = ensure_model_ready(model_to_use, backend=backend)
+            if ok and eff_url:
+                self.base_url = eff_url
 
         if not prompt:
             prompt = (
@@ -255,6 +290,12 @@ class LMStudioTranslator:
             raw_text = choices[0].get("message", {}).get("content", "").strip()
 
             clean_text = raw_text
+            if "<think>" in clean_text:
+                if "</think>" in clean_text:
+                    clean_text = re.sub(r"<think>.*?</think>", "", clean_text, flags=re.DOTALL).strip()
+                else:
+                    clean_text = clean_text.replace("<think>", "").strip()
+
             if clean_text.startswith("```") and clean_text.endswith("```"):
                 lines = clean_text.split("\n")
                 if len(lines) >= 3:
