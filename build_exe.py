@@ -61,6 +61,28 @@ def main():
         except Exception:
             pass
 
+    # 5. Create release zip archive (excluding only root models folder)
+    zip_name = "LocalTranslator-v1.2.0-windows-x64.zip"
+    zip_path = os.path.join(base_dir, zip_name)
+    print(f"\n[4/4] Создание релизного архива {zip_name}...")
+    try:
+        import zipfile
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+            for root, dirs, files in os.walk(dist_dir):
+                if os.path.abspath(root) == os.path.abspath(dist_dir):
+                    if 'models' in dirs:
+                        dirs.remove('models')
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    if os.path.islink(full_path):
+                        continue
+                    rel_path = os.path.relpath(full_path, os.path.dirname(dist_dir))
+                    zf.write(full_path, rel_path)
+        zip_size_mb = os.path.getsize(zip_path) / (1024 * 1024)
+        print(f"  [OK] Архив успешно создан: {zip_path} ({zip_size_mb:.2f} МБ)")
+    except Exception as e:
+        print(f"  [!] Ошибка создания архива: {e}")
+
     print()
     print("=" * 60)
     print("  Сборка успешно завершена!")
