@@ -37,12 +37,19 @@ def main():
         print("[ОШИБКА] Сборка PyInstaller завершилась с кодом ошибки:", ret)
         return
 
-    # 3. Copy config.json to output directory
-    print("[3/3] Копирование конфигурации...")
+    # 3. Copy config.json and images to output directory
+    print("[3/3] Копирование конфигурации и ресурсов...")
     src_cfg = os.path.join(base_dir, "config.json")
     dst_cfg = os.path.join(dist_dir, "config.json")
     if os.path.exists(src_cfg):
         shutil.copy2(src_cfg, dst_cfg)
+
+    src_images = os.path.join(base_dir, "images")
+    dst_images = os.path.join(dist_dir, "images")
+    if os.path.exists(src_images):
+        if os.path.exists(dst_images):
+            shutil.rmtree(dst_images)
+        shutil.copytree(src_images, dst_images)
 
     # 4. Link models directory via directory junction (0 extra disk space)
     models_src = os.path.join(base_dir, "models")

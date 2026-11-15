@@ -1781,7 +1781,15 @@ class MainWindow(QMainWindow):
         if req_id != self.current_req_id:
             return
         if err:
-            self.compare_nllb_text.setPlainText(f"❌ Ошибка NLLB:\n{err}")
+            if "model.bin" in err:
+                self.compare_nllb_text.setPlainText(
+                    f"❌ Ошибка NLLB: файлы модели не найдены.\n\n"
+                    f"💡 Чтобы скачать модель Meta NLLB 1.3B (~1.38 ГБ):\n"
+                    f"Нажмите фиолетовую кнопку «{tr('banner_download')}» вверху окна,\n"
+                    f"либо скопируйте папку models с основного компьютера."
+                )
+            else:
+                self.compare_nllb_text.setPlainText(f"❌ Ошибка NLLB:\n{err}")
             self.compare_nllb_lat.setText("")
         else:
             self.compare_nllb_text.setPlainText(res)
@@ -1805,7 +1813,15 @@ class MainWindow(QMainWindow):
         if req_id != self.current_req_id:
             return
         if err:
-            self.single_text.setPlainText(f"❌ Ошибка NLLB:\n{err}")
+            if "model.bin" in err:
+                self.single_text.setPlainText(
+                    f"❌ Ошибка NLLB: файлы модели не найдены.\n\n"
+                    f"💡 Чтобы скачать модель Meta NLLB 1.3B (~1.38 ГБ):\n"
+                    f"Нажмите фиолетовую кнопку «{tr('banner_download')}» вверху окна,\n"
+                    f"либо скопируйте папку models с основного компьютера."
+                )
+            else:
+                self.single_text.setPlainText(f"❌ Ошибка NLLB:\n{err}")
             self.single_lat_lbl.setText("")
         else:
             self.single_text.setPlainText(res)

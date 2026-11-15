@@ -108,6 +108,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=os.path.join(SPECPATH, 'images', 'icon.ico'),
 )
 
 coll = COLLECT(

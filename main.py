@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 
-from app.config import config
+from app.config import config, APP_DIR
 from app.i18n import tr
 from app.ui_main import MainWindow
 from app.ui_popup import FloatingPopup
@@ -137,11 +137,33 @@ def main():
         print("[Local Translator] Приложение уже запущено. Вторая копия не будет открыта.")
         sys.exit(0)
 
+    # Windows taskbar icon fix (AppUserModelID)
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("LocalTranslator.Translator.App.1")
+        except Exception:
+            pass
+
     # Windows high-DPI scaling
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QApplication(sys.argv)
     app.setApplicationName("Local Translator")
-    app.setWindowIcon(QIcon(create_tray_pixmap()))
+
+    # Set application icon (ICO for crisp multi-res rendering, fallback to generated pixmap)
+    icon_candidates = [
+        os.path.join(APP_DIR, "images", "icon.ico"),
+        os.path.join(getattr(sys, "_MEIPASS", APP_DIR), "images", "icon.ico"),
+    ]
+    app_icon = None
+    for cand in icon_candidates:
+        if os.path.exists(cand):
+            app_icon = QIcon(cand)
+            break
+    if not app_icon or app_icon.isNull():
+        app_icon = QIcon(create_tray_pixmap())
+
+    app.setWindowIcon(app_icon)
 
     manager = ApplicationManager(app)
     sys.exit(app.exec())
