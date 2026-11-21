@@ -42,3 +42,21 @@
 - `app/ui_popup.py`: Quick floating HUD translation window.
 - `app/ui_snippet.py`: High-DPI screen snipping tool.
 - `app/i18n.py`: 12-language localization dictionary.
+
+---
+
+## 📦 Deployment & Release History
+
+### Release v1.3.0 (2026-11-21)
+- **GitHub Release**: `v1.3.0` on `SaidAuita/LocalTranslator`.
+  - Standalone binary asset: `LocalTranslator.exe` (43.4 MB).
+  - Portable zip asset: `LocalTranslator-v1.3.0-windows-x64.zip` (361.6 MB).
+- **Web Platform**: Published on `ph-cu-s.com`.
+  - Tool page (EN): `https://ph-cu-s.com/tools/local-translator`
+  - Tool page (RU): `https://ph-cu-s.com/ru/tools/local-translator`
+  - Catalogs: `https://ph-cu-s.com/tools` & `https://ph-cu-s.com/ru/tools`
+- **Server Deployment**:
+  - Artifacts deployed to `phcus:/var/www/html/static/tools/`.
+  - Screenshots deployed to `phcus:/var/www/html/static/img/tools/`.
+  - Templates and routes deployed to `phcus:/var/www/html/`.
+  - Permissions set to `664`, gunicorn gracefully reloaded (`pkill -HUP -f gunicorn`), all HTTP responses verified with code 200.
