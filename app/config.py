@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from app.languages_data import LANGUAGES, get_nllb_code, get_language_info, get_display_name
 
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "engine": "compare",  # "nllb" | "lmstudio" | "compare"
@@ -25,6 +25,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "hotkey_translate": "<ctrl>+q",
     "hotkey_replace": "<ctrl>+<shift>+q",
     "hotkey_ocr": "<ctrl>+<shift>+s",
+    "hotkey_layout": "<pause>",
+    "hotkey_layout_translate": "<ctrl>+<shift>+r",
+    "fix_layout_on_translate": True,
     "auto_copy_translation": False,
     "close_popup_on_copy": True,
     "proxy": "http://127.0.0.1:10808",

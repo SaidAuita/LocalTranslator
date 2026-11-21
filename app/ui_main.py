@@ -382,6 +382,12 @@ class SettingsDialog(QDialog):
         self.hk_enabled_cb.setStyleSheet("color: #f1f5f9; font-weight: 600; font-size: 12px;")
         hk_layout.addWidget(self.hk_enabled_cb)
 
+        # Checkbox: auto-fix wrong layout
+        self.fix_layout_cb = QCheckBox(tr("settings_fix_layout"), self)
+        self.fix_layout_cb.setChecked(config.get("fix_layout_on_translate", True))
+        self.fix_layout_cb.setStyleSheet("color: #38bdf8; font-weight: 500; font-size: 12px;")
+        hk_layout.addWidget(self.fix_layout_cb)
+
         # Container for hotkey editors (disabled when master checkbox is unchecked)
         self.hk_container = QWidget(self)
         hk_grid = QGridLayout(self.hk_container)
@@ -407,16 +413,34 @@ class SettingsDialog(QDialog):
         hk_grid.addWidget(self.lbl_hk_repl, 1, 0)
         hk_grid.addWidget(self.edit_hk_repl, 1, 1)
 
-        # Row 2: OCR Snippet (Ctrl+Shift+S)
+        # Row 2: In-place Layout Switch (Pause) - Punto Switcher
+        self.lbl_hk_layout = QLabel(tr("settings_hk_layout"), self)
+        self.edit_hk_layout = QKeySequenceEdit(self)
+        self.edit_hk_layout.setMinimumHeight(32)
+        cur_layout = pynput_to_qt(config.get("hotkey_layout", "<pause>"))
+        self.edit_hk_layout.setKeySequence(QKeySequence(cur_layout))
+        hk_grid.addWidget(self.lbl_hk_layout, 2, 0)
+        hk_grid.addWidget(self.edit_hk_layout, 2, 1)
+
+        # Row 3: Layout Switch & Translate Popup (Ctrl+Shift+R)
+        self.lbl_hk_layout_trans = QLabel(tr("settings_hk_layout_trans"), self)
+        self.edit_hk_layout_trans = QKeySequenceEdit(self)
+        self.edit_hk_layout_trans.setMinimumHeight(32)
+        cur_layout_trans = pynput_to_qt(config.get("hotkey_layout_translate", "<ctrl>+<shift>+r"))
+        self.edit_hk_layout_trans.setKeySequence(QKeySequence(cur_layout_trans))
+        hk_grid.addWidget(self.lbl_hk_layout_trans, 3, 0)
+        hk_grid.addWidget(self.edit_hk_layout_trans, 3, 1)
+
+        # Row 4: OCR Snippet (Ctrl+Shift+S)
         self.lbl_hk_ocr = QLabel(tr("settings_hk_ocr"), self)
         self.edit_hk_ocr = QKeySequenceEdit(self)
         self.edit_hk_ocr.setMinimumHeight(32)
         cur_ocr = pynput_to_qt(config.get("hotkey_ocr", "<ctrl>+<shift>+s"))
         self.edit_hk_ocr.setKeySequence(QKeySequence(cur_ocr))
-        hk_grid.addWidget(self.lbl_hk_ocr, 2, 0)
-        hk_grid.addWidget(self.edit_hk_ocr, 2, 1)
+        hk_grid.addWidget(self.lbl_hk_ocr, 4, 0)
+        hk_grid.addWidget(self.edit_hk_ocr, 4, 1)
 
-        # Row 3: Reset to defaults button
+        # Row 5: Reset to defaults button
         h_reset = QHBoxLayout()
         self.reset_hk_btn = QPushButton(f"↺ {tr('settings_hk_reset')}", self)
         self.reset_hk_btn.setMinimumHeight(28)
@@ -439,7 +463,7 @@ class SettingsDialog(QDialog):
         self.reset_hk_btn.clicked.connect(self.reset_hotkeys_to_default)
         h_reset.addWidget(self.reset_hk_btn)
         h_reset.addStretch()
-        hk_grid.addLayout(h_reset, 3, 0, 1, 2)
+        hk_grid.addLayout(h_reset, 5, 0, 1, 2)
 
         hk_layout.addWidget(self.hk_container)
 
@@ -515,7 +539,10 @@ class SettingsDialog(QDialog):
     def reset_hotkeys_to_default(self):
         self.edit_hk_trans.setKeySequence(QKeySequence("Ctrl+Q"))
         self.edit_hk_repl.setKeySequence(QKeySequence("Ctrl+Shift+Q"))
+        self.edit_hk_layout.setKeySequence(QKeySequence("Pause"))
+        self.edit_hk_layout_trans.setKeySequence(QKeySequence("Ctrl+Shift+R"))
         self.edit_hk_ocr.setKeySequence(QKeySequence("Ctrl+Shift+S"))
+        self.fix_layout_cb.setChecked(True)
 
     def populate_local_models(self):
         self.lms_model_combo.blockSignals(True)
@@ -610,8 +637,11 @@ class SettingsDialog(QDialog):
         self.proxy_lbl.setText(tr("settings_proxy"))
         self.hk_group.setTitle(tr("settings_hk_group"))
         self.hk_enabled_cb.setText(tr("settings_hk_enable"))
+        self.fix_layout_cb.setText(tr("settings_fix_layout"))
         self.lbl_hk_trans.setText(tr("settings_hk_trans"))
         self.lbl_hk_repl.setText(tr("settings_hk_replace"))
+        self.lbl_hk_layout.setText(tr("settings_hk_layout"))
+        self.lbl_hk_layout_trans.setText(tr("settings_hk_layout_trans"))
         self.lbl_hk_ocr.setText(tr("settings_hk_ocr"))
         self.reset_hk_btn.setText(f"↺ {tr('settings_hk_reset')}")
         self.hk_info.setText(tr("settings_hk_info"))
@@ -672,8 +702,9 @@ class SettingsDialog(QDialog):
         config.set("start_minimized", self.start_min_cb.isChecked())
         config.set("ui_language", self.ui_lang_combo.currentData() or "en")
 
-        # Hotkeys
+        # Hotkeys & Layout
         config.set("hotkeys_enabled", self.hk_enabled_cb.isChecked())
+        config.set("fix_layout_on_translate", self.fix_layout_cb.isChecked())
 
         seq_trans = self.edit_hk_trans.keySequence().toString()
         if seq_trans:
@@ -686,6 +717,18 @@ class SettingsDialog(QDialog):
             pynput_repl = qt_to_pynput(seq_repl)
             if pynput_repl:
                 config.set("hotkey_replace", pynput_repl)
+
+        seq_layout = self.edit_hk_layout.keySequence().toString()
+        if seq_layout:
+            pynput_layout = qt_to_pynput(seq_layout)
+            if pynput_layout:
+                config.set("hotkey_layout", pynput_layout)
+
+        seq_layout_trans = self.edit_hk_layout_trans.keySequence().toString()
+        if seq_layout_trans:
+            pynput_layout_trans = qt_to_pynput(seq_layout_trans)
+            if pynput_layout_trans:
+                config.set("hotkey_layout_translate", pynput_layout_trans)
 
         seq_ocr = self.edit_hk_ocr.keySequence().toString()
         if seq_ocr:
@@ -1355,6 +1398,13 @@ class MainWindow(QMainWindow):
         self.ocr_btn.clicked.connect(self.start_screen_ocr)
         src_header.addWidget(self.ocr_btn)
 
+        self.layout_btn = QPushButton(f"🔄 {tr('layout_btn')}", self)
+        self.layout_btn.setObjectName("toolBtn")
+        self.layout_btn.setToolTip(tr("layout_btn_tip"))
+        self.layout_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.layout_btn.clicked.connect(self.toggle_source_layout)
+        src_header.addWidget(self.layout_btn)
+
         self.clear_btn = QPushButton(tr("clear_btn"), self)
         self.clear_btn.setObjectName("toolBtn")
         self.clear_btn.clicked.connect(self.clear_source)
@@ -1480,6 +1530,8 @@ class MainWindow(QMainWindow):
         # Shortcuts
         QShortcut(QKeySequence("Ctrl+Return"), self, self.trigger_translation)
         QShortcut(QKeySequence("Ctrl+Enter"), self, self.trigger_translation)
+        QShortcut(QKeySequence("Ctrl+R"), self, self.toggle_source_layout)
+        QShortcut(QKeySequence("Pause"), self, self.toggle_source_layout)
         ocr_seq = pynput_to_qt(config.get("hotkey_ocr", "<ctrl>+<shift>+s"))
         self.ocr_shortcut = QShortcut(QKeySequence(ocr_seq), self, self.start_screen_ocr)
 
@@ -1557,6 +1609,8 @@ class MainWindow(QMainWindow):
         self.paste_btn.setText(tr("paste_btn"))
         self.ocr_btn.setText(f"📷 {tr('ocr_btn')}")
         self.ocr_btn.setToolTip(tr("ocr_btn_tip"))
+        self.layout_btn.setText(f"🔄 {tr('layout_btn')}")
+        self.layout_btn.setToolTip(tr("layout_btn_tip"))
         self.clear_btn.setText(tr("clear_btn"))
         self.src_text.setPlaceholderText(tr("source_placeholder"))
 
@@ -1693,6 +1747,25 @@ class MainWindow(QMainWindow):
         if text:
             self.src_text.setPlainText(text)
 
+    def toggle_source_layout(self):
+        """Toggle keyboard layout of selected text or whole source text (Punto Switcher style)."""
+        from app.layout_converter import toggle_layout
+        cursor = self.src_text.textCursor()
+        if cursor.hasSelection():
+            selected = cursor.selectedText()
+            converted = toggle_layout(selected)
+            cursor.insertText(converted)
+        else:
+            text = self.src_text.toPlainText()
+            if text:
+                converted = toggle_layout(text)
+                self.src_text.setPlainText(converted)
+                c = self.src_text.textCursor()
+                c.movePosition(c.MoveOperation.End)
+                self.src_text.setTextCursor(c)
+        if self.auto_trans_cb.isChecked() and self.src_text.toPlainText().strip():
+            self.trigger_translation()
+
     def clear_source(self):
         self.src_text.clear()
         self.single_text.clear()
@@ -1730,9 +1803,21 @@ class MainWindow(QMainWindow):
         if not text:
             return
 
-        mode = config.get("engine", "compare")
         src = self.src_combo.currentData() or "auto"
         tgt = self.tgt_combo.currentData() or "auto"
+
+        # Check and auto-correct wrong keyboard layout if enabled
+        if config.get("fix_layout_on_translate", True):
+            from app.layout_converter import is_probably_wrong_layout, convert_layout
+            if is_probably_wrong_layout(text, src, tgt):
+                fixed = convert_layout(text, "auto")
+                if fixed != text:
+                    self.src_text.blockSignals(True)
+                    self.src_text.setPlainText(fixed)
+                    self.src_text.blockSignals(False)
+                    text = fixed
+
+        mode = config.get("engine", "compare")
 
         self.current_req_id += 1
         req_id = self.current_req_id

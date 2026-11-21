@@ -138,6 +138,27 @@ class FloatingPopup(QWidget):
         self.lang_combo.currentIndexChanged.connect(self.on_lang_changed)
         header.addWidget(self.lang_combo)
 
+        # Toggle Layout button (Punto Switcher)
+        self.toggle_layout_btn = QPushButton("🔄", self)
+        self.toggle_layout_btn.setFixedSize(24, 24)
+        self.toggle_layout_btn.setToolTip("Сменить раскладку исходного текста (Ctrl+R / Pause)")
+        self.toggle_layout_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #242936;
+                color: #94a3b8;
+                border-radius: 6px;
+                border: 1px solid #334155;
+                font-size: 13px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                color: #38bdf8;
+            }
+        """)
+        self.toggle_layout_btn.clicked.connect(self.manual_toggle_layout)
+        header.addWidget(self.toggle_layout_btn)
+
         # Expand button
         expand_btn = QPushButton("↗", self)
         expand_btn.setFixedSize(24, 24)
@@ -186,6 +207,20 @@ class FloatingPopup(QWidget):
         self.orig_lbl.setWordWrap(True)
         self.orig_lbl.setMaximumHeight(36)
         card_layout.addWidget(self.orig_lbl)
+
+        # Auto-corrected layout badge
+        self.layout_badge = QLabel(self)
+        self.layout_badge.setStyleSheet("""
+            color: #38bdf8;
+            background-color: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 5px;
+            padding: 3px 6px;
+            font-size: 11px;
+            font-weight: 500;
+        """)
+        self.layout_badge.setVisible(False)
+        card_layout.addWidget(self.layout_badge)
 
         # Translation Text Area
         self.trans_text = QTextEdit(self)
@@ -261,11 +296,35 @@ class FloatingPopup(QWidget):
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self.hide)
         QShortcut(QKeySequence(Qt.Key.Key_Return), self, self.copy_translation)
         QShortcut(QKeySequence(Qt.Key.Key_Enter), self, self.copy_translation)
+        QShortcut(QKeySequence("Ctrl+R"), self, self.manual_toggle_layout)
+        QShortcut(QKeySequence("Pause"), self, self.manual_toggle_layout)
 
-    def show_at_cursor(self, text: str):
+    def manual_toggle_layout(self):
+        """Toggle layout of current original text and re-translate immediately."""
+        if not self.original_text:
+            return
+        from app.layout_converter import toggle_layout
+        old = self.original_text
+        self.original_text = toggle_layout(old)
+        self.original_mistyped = old
+        self.layout_badge.setText(f"🔄 Раскладка: {old[:35]} ➔ {self.original_text[:35]}")
+        self.layout_badge.setVisible(True)
+        snippet = self.original_text[:90] + ("..." if len(self.original_text) > 90 else "")
+        self.orig_lbl.setText(f"Исходный: {snippet}")
+        self.start_translation()
+
+    def show_at_cursor(self, text: str, original_mistyped: str = None):
         self.original_text = text
+        self.original_mistyped = original_mistyped
         snippet = text[:90] + ("..." if len(text) > 90 else "")
         self.orig_lbl.setText(f"Исходный: {snippet}")
+
+        if original_mistyped and original_mistyped != text:
+            self.layout_badge.setText(f"🔄 Раскладка: {original_mistyped[:35]} ➔ {text[:35]}")
+            self.layout_badge.setVisible(True)
+        else:
+            self.layout_badge.setVisible(False)
+
         self.trans_text.setPlainText("⏳ Перевод...")
         self.latency_lbl.setText("")
         self.copy_btn.setText("Копировать (Enter)")

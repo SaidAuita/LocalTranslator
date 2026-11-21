@@ -58,6 +58,8 @@ def pynput_to_qt(pynput_str: str) -> str:
         "<enter>": "Enter",
         "<tab>": "Tab",
         "<esc>": "Esc",
+        "<pause>": "Pause",
+        "<break>": "Pause",
     }
     for p in parts:
         p_clean = p.strip()
@@ -102,6 +104,8 @@ def qt_to_pynput(qt_str: str) -> str:
             pynput_parts.append("<tab>")
         elif p_clean in ("esc", "escape"):
             pynput_parts.append("<esc>")
+        elif p_clean in ("pause", "break"):
+            pynput_parts.append("<pause>")
         else:
             pynput_parts.append(p_clean)
     return "+".join(pynput_parts)
@@ -199,9 +203,11 @@ def set_clipboard_text(text: str) -> bool:
 
 class HotkeyService(QObject):
     # Signals sent to Qt Main Thread
-    translate_requested = pyqtSignal(str)  # text to translate in popup
-    replace_requested = pyqtSignal(str)    # text to translate & replace
-    ocr_requested = pyqtSignal()           # trigger screen snippet OCR
+    translate_requested = pyqtSignal(str)        # text to translate in popup
+    replace_requested = pyqtSignal(str)          # text to translate & replace
+    ocr_requested = pyqtSignal()                 # trigger screen snippet OCR
+    layout_switch_requested = pyqtSignal(str)    # Punto Switcher: switch layout in-place
+    layout_translate_requested = pyqtSignal(str) # switch layout & translate in popup
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -213,7 +219,9 @@ class HotkeyService(QObject):
         self,
         hotkey_translate="<ctrl>+q",
         hotkey_replace="<ctrl>+<shift>+q",
-        hotkey_ocr="<ctrl>+<shift>+s"
+        hotkey_ocr="<ctrl>+<shift>+s",
+        hotkey_layout="<pause>",
+        hotkey_layout_translate="<ctrl>+<shift>+r"
     ):
         if self.is_running:
             self.stop()
@@ -241,6 +249,20 @@ class HotkeyService(QObject):
             except Exception as e:
                 print(f"[Hotkey] Некорректная комбинация для OCR '{hotkey_ocr}': {e}")
 
+        if hotkey_layout:
+            try:
+                keyboard.HotKey.parse(hotkey_layout)
+                hotkeys_dict[hotkey_layout] = self._on_hotkey_layout
+            except Exception as e:
+                print(f"[Hotkey] Некорректная комбинация для смены раскладки '{hotkey_layout}': {e}")
+
+        if hotkey_layout_translate:
+            try:
+                keyboard.HotKey.parse(hotkey_layout_translate)
+                hotkeys_dict[hotkey_layout_translate] = self._on_hotkey_layout_translate
+            except Exception as e:
+                print(f"[Hotkey] Некорректная комбинация для перевода со сменой раскладки '{hotkey_layout_translate}': {e}")
+
         if not hotkeys_dict:
             print("[Hotkey] Нет активных горячих клавиш для регистрации.")
             return
@@ -259,17 +281,35 @@ class HotkeyService(QObject):
         enabled: bool = True,
         hotkey_translate: str = "<ctrl>+q",
         hotkey_replace: str = "<ctrl>+<shift>+q",
-        hotkey_ocr: str = "<ctrl>+<shift>+s"
+        hotkey_ocr: str = "<ctrl>+<shift>+s",
+        hotkey_layout: str = "<pause>",
+        hotkey_layout_translate: str = "<ctrl>+<shift>+r"
     ):
         """Update hotkey configuration at runtime without application restart."""
         self.stop()
         if enabled:
-            self.start(hotkey_translate, hotkey_replace, hotkey_ocr)
+            self.start(hotkey_translate, hotkey_replace, hotkey_ocr, hotkey_layout, hotkey_layout_translate)
         else:
             print("[Hotkey] Глобальные хоткеи отключены.")
 
     def _on_hotkey_ocr(self):
         self.ocr_requested.emit()
+
+    def _on_hotkey_layout(self):
+        threading.Thread(target=self._worker_layout, daemon=True).start()
+
+    def _worker_layout(self):
+        text = self._copy_selection()
+        if text:
+            self.layout_switch_requested.emit(text)
+
+    def _on_hotkey_layout_translate(self):
+        threading.Thread(target=self._worker_layout_translate, daemon=True).start()
+
+    def _worker_layout_translate(self):
+        text = self._copy_selection()
+        if text:
+            self.layout_translate_requested.emit(text)
 
     def stop(self):
         if self.listener:

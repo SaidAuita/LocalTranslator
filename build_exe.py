@@ -62,7 +62,8 @@ def main():
             pass
 
     # 5. Create release zip archive (excluding only root models folder)
-    zip_name = "LocalTranslator-v1.2.0-windows-x64.zip"
+    from app.config import APP_VERSION
+    zip_name = f"LocalTranslator-v{APP_VERSION}-windows-x64.zip"
     zip_path = os.path.join(base_dir, zip_name)
     print(f"\n[4/4] Создание релизного архива {zip_name}...")
     try:

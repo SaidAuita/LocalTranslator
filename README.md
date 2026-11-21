@@ -67,7 +67,13 @@
 * **`Ctrl+Q`**: Select text anywhere in Windows (browser, chat, document) and press `Ctrl+Q` to pop up a dark-mode floating HUD with instant translation right under your cursor.
 * **`Ctrl+Shift+Q`**: Instantly replaces selected text in-place with its translation.
 
-### 6. 🌍 200+ Languages with Intelligent Search
+### 6. 🔄 Punto Switcher Layout Correction & Hotkey (`Pause` / `Ctrl+Shift+R` / `Ctrl+R`)
+* **In-Place Layout Switching (<kbd>Pause</kbd>)**: Works just like classic Punto Switcher! Select any text typed in the wrong layout (`ghbdtn` or `руддщ`) and press <kbd>Pause</kbd> — it immediately flips the layout in-place in any Windows app.
+* **Auto-Correction on Translate**: When translating text typed in the wrong layout (e.g., `ghbdtn, rfr ltkf?`), Local Translator intelligently recognizes the mistake, fixes it to `Привет, как дела?`, and translates it to `Hello, how are you?`.
+* **Quick HUD & Main UI Controls**: Click the `[🔄]` button or press <kbd>Ctrl+R</kbd> / <kbd>Pause</kbd> to toggle the layout of the source text at any moment.
+* **Full Customization**: Both hotkeys (<kbd>Pause</kbd> for layout switch, <kbd>Ctrl+Shift+R</kbd> for layout+translate) and the auto-correction toggle are configurable in Settings.
+
+### 7. 🌍 200+ Languages with Intelligent Search
 * Full FLORES-200 language coverage (202 languages).
 * Smart substring autocompletion and recent language history pinning.
 * **Locale-Aware Display**: Shows English names first (`German / Deutsch (Немецкий) [de]`, sorted A–Z) when using an international UI language, and Russian first (`Немецкий / Deutsch (German) [de]`, sorted А–Я) in Russian mode.
@@ -89,6 +95,9 @@
 |---|---|---|
 | <kbd>Ctrl</kbd> + <kbd>Q</kbd> | **Popup Translation** | Shows floating translation window near cursor for selected text |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> | **Replace In-Place** | Translates and replaces selected text directly in the active app |
+| <kbd>Pause</kbd> | **Layout Switch (Punto)** | Converts keyboard layout of selected text in-place (RU ↔ EN) |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | **Layout + Translate** | Converts layout of selected text and opens translation popup |
+| <kbd>Ctrl</kbd> + <kbd>R</kbd> | **Toggle Layout in UI** | Toggles layout of source text in main window or popup |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | **Screen Snippet OCR** | Dims screen, captures selected rectangle, extracts text via Vision LLM & translates |
 | <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | **Translate** | Triggers translation in the main window |
 | <kbd>Esc</kbd> | **Dismiss / Cancel** | Closes popup, settings dialog, or cancels screen snipping |
@@ -223,7 +232,13 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 * **`Ctrl+Q`**: выделите текст в любом приложении Windows (браузер, Telegram, PDF, IDE) — у курсора мыши появится темное всплывающее окно с переводом.
 * **`Ctrl+Shift+Q`**: автоматически заменяет выделенный текст его переводом прямо в исходной программе.
 
-### 6. 🌍 200+ языков с умным поиском
+### 6. 🔄 Исправление неверной раскладки клавиатуры и хоткей Punto Switcher (`Pause` / `Ctrl+Shift+R` / `Ctrl+R`)
+* **Смена раскладки на месте (<kbd>Pause</kbd>)**: Работает как в классическом Punto Switcher! Выделите текст, случайно набранный не в той раскладке (`ghbdtn` или `руддщ`), и нажмите <kbd>Pause</kbd> — текст будет мгновенно заменен на месте на правильный (`привет` или `hello`) в любом приложении Windows.
+* **Автоматическое исправление при переводе**: При переводе текста с ошибочной раскладкой (например, `ghbdtn, rfr ltkf?`) программа автоматически определяет опечатку, исправляет её на `Привет, как дела?` и переводит на нужный язык (`Hello, how are you?`).
+* **Кнопки переключения в интерфейсе**: Кнопка `[🔄 Раскладка]` и горячие клавиши <kbd>Ctrl+R</kbd> / <kbd>Pause</kbd> в основном окне и всплывающем окне позволяют в один клик сменить раскладку исходного текста.
+* **Полная кастомизация**: Клавиша смены раскладки (<kbd>Pause</kbd>), сочетание для перевода со сменой раскладки (<kbd>Ctrl+Shift+R</kbd>) и тумблер автоисправления настраиваются в меню «Настройки».
+
+### 7. 🌍 200+ языков с умным поиском
 * Полная поддержка 202 языков стандарта FLORES-200.
 * Автопоиск по подстроке и закрепление недавних языков (⭐).
 * **Адаптация под локаль**: при английском интерфейсе первым отображается английское название (`German / Deutsch (Немецкий) [de]`, сортировка A–Z), при русском — русское (`Немецкий / Deutsch (German) [de]`, сортировка А–Я).
@@ -243,6 +258,9 @@ Or run `build_exe.bat`. The output will be generated in `dist/LocalTranslator/Lo
 |---|---|---|
 | <kbd>Ctrl</kbd> + <kbd>Q</kbd> | **Всплывающий перевод** | Показывает всплывающее окно перевода у курсора для выделенного текста |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> | **Замена текста на месте** | Переводит и заменяет выделенный текст прямо в активном приложении |
+| <kbd>Pause</kbd> | **Смена раскладки (Punto)** | Меняет раскладку выделенного текста на месте (RU ↔ EN) как в Punto Switcher |
+| <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | **Раскладка + Перевод** | Меняет раскладку выделенного текста и открывает окно перевода |
+| <kbd>Ctrl</kbd> + <kbd>R</kbd> | **Смена раскладки в UI** | Меняет раскладку текста в поле оригинала (в окне или попапе) |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | **Скриншот OCR** | Затемняет экран, делает снимок выделенной области, распознает текст через Vision LLM и переводит |
 | <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | **Перевести** | Запускает перевод в основном окне |
 | <kbd>Esc</kbd> | **Закрыть / Отмена** | Закрывает всплывающее окно или отменяет выделение фрагмента экрана |

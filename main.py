@@ -40,7 +40,9 @@ class ApplicationManager:
             hk_trans = config.get("hotkey_translate", "<ctrl>+q")
             hk_repl = config.get("hotkey_replace", "<ctrl>+<shift>+q")
             hk_ocr = config.get("hotkey_ocr", "<ctrl>+<shift>+s")
-            self.hotkey_service.start(hk_trans, hk_repl, hk_ocr)
+            hk_layout = config.get("hotkey_layout", "<pause>")
+            hk_layout_trans = config.get("hotkey_layout_translate", "<ctrl>+<shift>+r")
+            self.hotkey_service.start(hk_trans, hk_repl, hk_ocr, hk_layout, hk_layout_trans)
         else:
             print("[Hotkey] Глобальные горячие клавиши отключены в настройках.")
 
@@ -50,10 +52,12 @@ class ApplicationManager:
             self.main_window.show()
 
     def connect_signals(self):
-        # Hotkey -> Popup & OCR
+        # Hotkey -> Popup & OCR & Layout
         self.hotkey_service.translate_requested.connect(self.on_hotkey_translate)
         self.hotkey_service.replace_requested.connect(self.on_hotkey_replace)
         self.hotkey_service.ocr_requested.connect(self.main_window.start_screen_ocr)
+        self.hotkey_service.layout_switch_requested.connect(self.on_hotkey_layout_switch)
+        self.hotkey_service.layout_translate_requested.connect(self.on_hotkey_layout_translate)
 
         # Popup -> Main Window
         self.popup.open_main_requested.connect(self.on_popup_open_main)
@@ -80,12 +84,26 @@ class ApplicationManager:
         hk_trans = config.get("hotkey_translate", "<ctrl>+q")
         hk_repl = config.get("hotkey_replace", "<ctrl>+<shift>+q")
         hk_ocr = config.get("hotkey_ocr", "<ctrl>+<shift>+s")
-        self.hotkey_service.update_hotkeys(enabled, hk_trans, hk_repl, hk_ocr)
+        hk_layout = config.get("hotkey_layout", "<pause>")
+        hk_layout_trans = config.get("hotkey_layout_translate", "<ctrl>+<shift>+r")
+        self.hotkey_service.update_hotkeys(enabled, hk_trans, hk_repl, hk_ocr, hk_layout, hk_layout_trans)
 
     def on_hotkey_translate(self, text: str):
+        if config.get("fix_layout_on_translate", True):
+            from app.layout_converter import is_probably_wrong_layout, convert_layout
+            if is_probably_wrong_layout(text):
+                fixed = convert_layout(text, "auto")
+                self.popup.show_at_cursor(fixed, original_mistyped=text)
+                return
         self.popup.show_at_cursor(text)
 
     def on_hotkey_replace(self, text: str):
+        # Check layout auto-fix
+        if config.get("fix_layout_on_translate", True):
+            from app.layout_converter import is_probably_wrong_layout, convert_layout
+            if is_probably_wrong_layout(text):
+                text = convert_layout(text, "auto")
+
         # Translate and replace in place
         engine = config.get("engine", "nllb")
         try:
@@ -97,6 +115,19 @@ class ApplicationManager:
                 self.hotkey_service.paste_text(res)
         except Exception as e:
             print(f"[Replace Error] {e}")
+
+    def on_hotkey_layout_switch(self, text: str):
+        """Punto Switcher behavior: convert selected text layout in-place (Pause)."""
+        from app.layout_converter import toggle_layout
+        converted = toggle_layout(text)
+        if converted != text:
+            self.hotkey_service.paste_text(converted)
+
+    def on_hotkey_layout_translate(self, text: str):
+        """Convert layout and open translation popup (Ctrl+Shift+R)."""
+        from app.layout_converter import toggle_layout
+        converted = toggle_layout(text)
+        self.popup.show_at_cursor(converted, original_mistyped=text if converted != text else None)
 
     def on_popup_open_main(self):
         text = self.popup.original_text
